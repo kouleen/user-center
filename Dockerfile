@@ -10,7 +10,7 @@ RUN go mod download
 # 复制整个项目到工作目录
 COPY . .
 # 构建应用，禁用 CGO
-RUN CGO_ENABLED=0 go build -o user-center ./main.go
+RUN CGO_ENABLED=0 go build -o user-center .
 
 # 第二阶段：创建轻量级运行时镜像
 FROM kouleen/alpine:latest
