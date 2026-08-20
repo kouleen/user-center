@@ -5,8 +5,8 @@ import (
 
 	"github.com/bytedance/gopkg/cloud/metainfo"
 	"github.com/bytedance/gopkg/util/logger"
-	"github.com/kouleen/user-center/kitex_gen/user"
-	"github.com/kouleen/user-center/kitex_gen/user_position"
+	"github.com/kouleen/idl/kitex_gen/user"
+	"github.com/kouleen/idl/kitex_gen/user_position"
 	"github.com/kouleen/user-center/service"
 	"github.com/kouleen/user-center/utils"
 )
@@ -19,7 +19,6 @@ func (s *UserHeaderServiceImpl) Login(ctx context.Context, loginRequest *user.Lo
 	traceId, _ := metainfo.GetPersistentValue(ctx, "x-trace-id")
 	logger.CtxInfof(ctx, "[%s]-Login request loginRequest: %#v", traceId, loginRequest)
 	return service.Login(ctx, loginRequest)
-
 }
 
 // SendSmsMessage implements the UserHeaderServiceImpl interface.
@@ -30,8 +29,9 @@ func (s *UserHeaderServiceImpl) SendSmsMessage(ctx context.Context, loginRequest
 // Logout implements the UserHeaderServiceImpl interface.
 func (s *UserHeaderServiceImpl) Logout(ctx context.Context, loginRequest *user.LoginRequest) (resp bool, err error) {
 	traceId, _ := metainfo.GetPersistentValue(ctx, "x-trace-id")
-	logger.CtxInfof(ctx, "Logout request traceId: %s", traceId)
-	token, _ := metainfo.GetPersistentValue(ctx, "token")
+	userId, _ := metainfo.GetPersistentValue(ctx, "x-user-id")
+	logger.CtxInfof(ctx, "Logout request traceId: %s,userId: %s", traceId, userId)
+	token, _ := metainfo.GetPersistentValue(ctx, "x-token")
 	if err = utils.Del(ctx, "auth:token:"+token); err != nil {
 		return false, err
 	}

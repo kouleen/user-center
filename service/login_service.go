@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kouleen/user-center/kitex_gen/user"
+	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/utils"
 )
 

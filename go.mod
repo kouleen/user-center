@@ -3,14 +3,15 @@ module github.com/kouleen/user-center
 go 1.25.0
 
 require (
-	github.com/cloudwego/gopkg v0.2.0
+	github.com/bytedance/gopkg v0.1.4
 	github.com/cloudwego/kitex v0.16.3
 	github.com/google/uuid v1.6.0
 	github.com/kitex-contrib/registry-etcd v0.3.0
+	github.com/kouleen/idl v0.0.2
+	github.com/redis/go-redis/v9 v9.22.0
 )
 
 require (
-	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -19,6 +20,7 @@ require (
 	github.com/cloudwego/dynamicgo v0.8.0 // indirect
 	github.com/cloudwego/fastpb v0.0.6 // indirect
 	github.com/cloudwego/frugal v0.3.1 // indirect
+	github.com/cloudwego/gopkg v0.2.0 // indirect
 	github.com/cloudwego/localsession v0.2.1 // indirect
 	github.com/cloudwego/netpoll v0.7.2 // indirect
 	github.com/cloudwego/runtimex v0.1.1 // indirect
@@ -38,7 +40,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/redis/go-redis/v9 v9.22.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/tidwall/gjson v1.17.3 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

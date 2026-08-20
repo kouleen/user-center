@@ -10,7 +10,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	etcd "github.com/kitex-contrib/registry-etcd"
-	"github.com/kouleen/user-center/kitex_gen/user/userheaderservice"
+	"github.com/kouleen/idl/kitex_gen/user/userheaderservice"
 	"github.com/kouleen/user-center/utils"
 )
 
@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	addr, err := net.ResolveTCPAddr(os.Getenv("NETWORK"), os.Getenv("ADDRESS"))
+	addr, err := net.ResolveTCPAddr("tcp", os.Getenv("ADDRESS"))
 	if err != nil {
 		log.Fatal(err)
 	}
