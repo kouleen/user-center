@@ -1,0 +1,18 @@
+services:
+  user-center:
+    image: kouleen/user-center:latest
+    container_name: user-center
+    environment:
+      - ETCD_ENDPOINTS=${ETCD_ENDPOINTS}
+      - ADDRESS=${ADDRESS}
+      - SERVICE_NAME=${SERVICE_NAME}
+      - REDIS_ADDR=${REDIS_ADDR}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB}
+    networks:
+      - go-server-internal
+networks:
+  go-server-internal:
+    external: true
+    name: go-server-internal
+
