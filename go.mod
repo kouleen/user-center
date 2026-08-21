@@ -7,7 +7,7 @@ require (
 	github.com/cloudwego/kitex v0.16.3
 	github.com/google/uuid v1.6.0
 	github.com/kitex-contrib/registry-etcd v0.3.0
-	github.com/kouleen/idl v0.0.2
+	github.com/kouleen/idl v0.0.5
 	github.com/redis/go-redis/v9 v9.22.0
 )
 

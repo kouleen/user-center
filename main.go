@@ -10,7 +10,8 @@ import (
 	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	etcd "github.com/kitex-contrib/registry-etcd"
-	"github.com/kouleen/idl/kitex_gen/user/userheaderservice"
+	"github.com/kouleen/idl/kitex_gen/user/userservice"
+	"github.com/kouleen/user-center/middleware"
 	"github.com/kouleen/user-center/utils"
 )
 
@@ -29,11 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	svr := userheaderservice.NewServer(new(UserHeaderServiceImpl),
+	svr := userservice.NewServer(new(UserServiceImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: os.Getenv("SERVICE_NAME")}),
 		server.WithMetaHandler(transmeta.ServerTTHeaderHandler),
 		server.WithRegistry(r),
 		server.WithServiceAddr(addr),
+		server.WithMiddleware(middleware.RpcClientMiddleware),
 	)
 	err = svr.Run()
 
