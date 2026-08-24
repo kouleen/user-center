@@ -128,7 +128,7 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	imgBase64 := utils.CreateCaptchaSvg(code)
 	// 验证码保留60秒
 	duration := time.Duration(60) * time.Second
-	if err = utils.Set(ctx, uuid, code, duration); err != nil {
+	if err = utils.Set(ctx, "login:password:"+uuid, code, duration); err != nil {
 		return
 	}
 	return &user.CaptchaResponse{CaptchaEnabled: true, Img: uuid, Uuid: imgBase64}, nil
