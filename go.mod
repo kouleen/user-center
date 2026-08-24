@@ -3,15 +3,19 @@ module github.com/kouleen/user-center
 go 1.25.0
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/bytedance/gopkg v0.1.4
 	github.com/cloudwego/kitex v0.16.3
-	github.com/google/uuid v1.6.0
 	github.com/kitex-contrib/registry-etcd v0.3.0
-	github.com/kouleen/idl v0.0.5
+	github.com/kouleen/idl v0.0.7
 	github.com/redis/go-redis/v9 v9.22.0
+	golang.org/x/crypto v0.36.0
+	gorm.io/driver/mysql v1.6.0
+	gorm.io/gorm v1.31.2
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -29,12 +33,15 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
+	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/pprof v0.0.0-20240727154555-813a5fbdbec8 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jhump/protoreflect v1.8.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

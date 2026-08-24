@@ -3,12 +3,24 @@ package utils
 import (
 	"context"
 	"log"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 var redisClient *redis.Client
+
+func init() {
+	if v := os.Getenv("REDIS_DB"); v != "" {
+		if iv, err := strconv.Atoi(v); err == nil {
+			InitRedis(os.Getenv("REDIS_ADDR"), os.Getenv("REDIS_PASSWORD"), iv)
+			return
+		}
+	}
+	log.Fatalf("invalid redis db value")
+}
 
 // InitRedis 初始化Redis连接（全局单例）
 func InitRedis(addr, password string, db int) {

@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/pkg/transmeta"
@@ -12,15 +11,9 @@ import (
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"github.com/kouleen/idl/kitex_gen/user/userservice"
 	"github.com/kouleen/user-center/middleware"
-	"github.com/kouleen/user-center/utils"
 )
 
 func main() {
-	if v := os.Getenv("REDIS_DB"); v != "" {
-		if iv, err := strconv.Atoi(v); err == nil {
-			utils.InitRedis(os.Getenv("REDIS_ADDR"), os.Getenv("REDIS_PASSWORD"), iv)
-		}
-	}
 	// etcd注册中心
 	r, err := etcd.NewEtcdRegistry([]string{os.Getenv("ETCD_ENDPOINTS")})
 	if err != nil {
