@@ -84,7 +84,20 @@ jobs:
                 "ADDRESS=${{ secrets.ADDRESS }}",
                 "REDIS_ADDR=${{ secrets.REDIS_ADDR }}",
                 "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}",
-                "REDIS_DB=${{ secrets.REDIS_DB }}"
+                "REDIS_DB=${{ secrets.REDIS_DB }}",
+                "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}",
+                "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}",
+                "MYSQL_HOST=${{ secrets.MYSQL_HOST }}",
+                "MYSQL_PORT=${{ secrets.MYSQL_PORT }}",
+                "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}",
+                "MYSQL_SLAVE1_USERNAME=${{ secrets.MYSQL_SLAVE1_USERNAME }}",
+                "MYSQL_SLAVE1_PASSWORD=${{ secrets.MYSQL_SLAVE1_PASSWORD }}",
+                "MYSQL_SLAVE1_HOST=${{ secrets.MYSQL_SLAVE1_HOST }}",
+                "MYSQL_SLAVE1_PORT=${{ secrets.MYSQL_SLAVE1_PORT }}",
+                "MYSQL_SLAVE2_USERNAME=${{ secrets.MYSQL_SLAVE2_USERNAME }}",
+                "MYSQL_SLAVE2_PASSWORD=${{ secrets.MYSQL_SLAVE2_PASSWORD }}",
+                "MYSQL_SLAVE2_HOST=${{ secrets.MYSQL_SLAVE2_HOST }}",
+                "MYSQL_SLAVE2_PORT=${{ secrets.MYSQL_SLAVE2_PORT }}"
             ],
             "volumeBinds": [],
             "cmdOverride": []
