@@ -13,6 +13,7 @@ import (
 	"github.com/kouleen/user-center/modle"
 	"github.com/kouleen/user-center/repository"
 	"github.com/kouleen/user-center/utils"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -104,7 +105,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	duration := time.Duration(24) * time.Hour
 	idStr := strconv.FormatInt(userHeader.ID, 10)
 	token, err := utils.Get(ctx, idStr)
-	if err != nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 	if err = utils.Del(ctx, token); err != nil {
