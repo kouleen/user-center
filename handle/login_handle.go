@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/service"
-	"github.com/kouleen/user-center/utils"
 )
 
 type LoginProcess interface {
@@ -52,7 +52,7 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if req.GetPhone() == "" {
 			return errors.New("phone is empty")
 		}
-		captchaCode, err := utils.Get(ctx, "login:phone:"+req.GetPhone())
+		captchaCode, err := redis.Get(ctx, "login:phone:"+req.GetPhone())
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if req.GetUuid() == "" {
 			return errors.New("uuid is empty")
 		}
-		captchaCode, err := utils.Get(ctx, "login:password:"+req.GetUuid())
+		captchaCode, err := redis.Get(ctx, "login:password:"+req.GetUuid())
 		if err != nil {
 			return err
 		}

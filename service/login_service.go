@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	rediscli "github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
@@ -47,7 +48,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 		}
 	}
 	// 删除验证码
-	if err = utils.Del(ctx, "login:phone:"+loginRequest.GetPhone()); err != nil {
+	if err = rediscli.Del(ctx, "login:phone:"+loginRequest.GetPhone()); err != nil {
 		return
 	}
 	if common.BaseStatus(userHeader.Status) == common.BaseStatus_DISABLE {
@@ -60,17 +61,17 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 	generateUUID := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
 	idStr := strconv.FormatInt(userHeader.ID, 10)
-	token, err := utils.Get(ctx, idStr)
+	token, err := rediscli.Get(ctx, idStr)
 	if err != nil {
 		return nil, err
 	}
-	if err = utils.Del(ctx, token); err != nil {
+	if err = rediscli.Del(ctx, token); err != nil {
 		return nil, err
 	}
-	if err = utils.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
+	if err = rediscli.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
 		return nil, err
 	}
-	if err = utils.Set(ctx, idStr, generateUUID, duration); err != nil {
+	if err = rediscli.Set(ctx, idStr, generateUUID, duration); err != nil {
 		return nil, err
 	}
 	return &user.LoginResponse{
@@ -87,7 +88,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 		return
 	}
 	// 删除验证码
-	if err = utils.Del(ctx, "login:password:"+loginRequest.GetUuid()); err != nil {
+	if err = rediscli.Del(ctx, "login:password:"+loginRequest.GetUuid()); err != nil {
 		return
 	}
 	// 对比密码
@@ -104,17 +105,17 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	generateUUID := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
 	idStr := strconv.FormatInt(userHeader.ID, 10)
-	token, err := utils.Get(ctx, idStr)
+	token, err := rediscli.Get(ctx, idStr)
 	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
-	if err = utils.Del(ctx, token); err != nil {
+	if err = rediscli.Del(ctx, token); err != nil {
 		return nil, err
 	}
-	if err = utils.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
+	if err = rediscli.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
 		return nil, err
 	}
-	if err = utils.Set(ctx, idStr, generateUUID, duration); err != nil {
+	if err = rediscli.Set(ctx, idStr, generateUUID, duration); err != nil {
 		return nil, err
 	}
 	return &user.LoginResponse{
@@ -129,7 +130,7 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	imgBase64 := utils.CreateCaptchaSvg(code)
 	// 验证码保留60秒
 	duration := time.Duration(60) * time.Second
-	if err = utils.Set(ctx, "login:password:"+uuid, code, duration); err != nil {
+	if err = rediscli.Set(ctx, "login:password:"+uuid, code, duration); err != nil {
 		return
 	}
 	return &user.CaptchaResponse{CaptchaEnabled: true, Img: uuid, Uuid: imgBase64}, nil
