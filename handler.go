@@ -64,8 +64,7 @@ func (s *UserServiceImpl) QueryUserHeaderInfo(ctx context.Context, req *user.Use
 
 // QueryUserPositionPage implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserPositionPage(ctx context.Context, req *user_position.UserPositionRequest) (resp *user_position.UserPositionPageResponse, err error) {
-	// TODO: Your code here...
-	return
+	return handle.QueryPositionPage(ctx, req)
 }
 
 // SaveUserPosition implements the UserServiceImpl interface.
