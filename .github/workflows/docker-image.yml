@@ -94,10 +94,12 @@ jobs:
                 "MYSQL_SLAVE1_PASSWORD=${{ secrets.MYSQL_SLAVE1_PASSWORD }}",
                 "MYSQL_SLAVE1_HOST=${{ secrets.MYSQL_SLAVE1_HOST }}",
                 "MYSQL_SLAVE1_PORT=${{ secrets.MYSQL_SLAVE1_PORT }}",
+                "MYSQL_SLAVE1_DATABASE=${{ secrets.MYSQL_SLAVE1_DATABASE }}",
                 "MYSQL_SLAVE2_USERNAME=${{ secrets.MYSQL_SLAVE2_USERNAME }}",
                 "MYSQL_SLAVE2_PASSWORD=${{ secrets.MYSQL_SLAVE2_PASSWORD }}",
                 "MYSQL_SLAVE2_HOST=${{ secrets.MYSQL_SLAVE2_HOST }}",
-                "MYSQL_SLAVE2_PORT=${{ secrets.MYSQL_SLAVE2_PORT }}"
+                "MYSQL_SLAVE2_PORT=${{ secrets.MYSQL_SLAVE2_PORT }}",
+                "MYSQL_SLAVE2_DATABASE=${{ secrets.MYSQL_SLAVE2_DATABASE }}"
             ],
             "volumeBinds": [],
             "cmdOverride": []
