@@ -3,6 +3,7 @@ package handle
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/user"
@@ -73,7 +74,8 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if err != nil {
 			return err
 		}
-		if captchaCode != req.GetCode() {
+		// 转成全小些对比
+		if strings.ToLower(captchaCode) != strings.ToLower(req.GetCode()) {
 			return errors.New("captcha code error")
 		}
 	default:
