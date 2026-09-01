@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	"github.com/kouleen/common/bootstrap"
 	"github.com/kouleen/common/middleware"
@@ -11,5 +12,8 @@ import (
 func main() {
 	bootstrap.Run(rpc.USER_RPC_SERVER, func(option ...server.Option) server.Server {
 		return userservice.NewServer(new(UserServiceImpl), option...)
-	}, bootstrap.WithServerMiddleware(middleware.RpcServerMiddleware))
+	},
+		bootstrap.WithServerMiddleware(middleware.RpcServerMiddleware),
+		bootstrap.WithServerOption(server.WithMetaHandler(transmeta.ServerTTHeaderHandler)),
+	)
 }

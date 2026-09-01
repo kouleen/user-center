@@ -59,8 +59,7 @@ func (s *UserServiceImpl) QueryUserHeaderList(ctx context.Context, req *user.Use
 
 // QueryUserHeaderInfo implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserHeaderInfo(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderResponse, err error) {
-	// TODO: Your code here...
-	return
+	return handle.QueryUserHeaderInfo(ctx, req)
 }
 
 // QueryUserPositionPage implements the UserServiceImpl interface.

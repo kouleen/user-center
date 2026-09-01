@@ -9,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	rediscli "github.com/kouleen/common/pkg/redis"
-	"github.com/kouleen/idl/kitex_gen/common"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
 	"github.com/kouleen/user-center/repository"
@@ -51,7 +50,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 	if err = rediscli.Del(ctx, "login:phone:"+loginRequest.GetPhone()); err != nil {
 		return
 	}
-	if common.BaseStatus(userHeader.Status) == common.BaseStatus_DISABLE {
+	if userHeader.Status == 0 {
 		return nil, errors.New("this account has been deactivated")
 	}
 	userHeaderByte, err := json.Marshal(userHeader)
@@ -95,7 +94,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	if err = bcrypt.CompareHashAndPassword([]byte(userHeader.Password), []byte(loginRequest.Password)); err != nil {
 		return
 	}
-	if common.BaseStatus(userHeader.Status) == common.BaseStatus_DISABLE {
+	if userHeader.Status == 0 {
 		return nil, errors.New("this account has been deactivated")
 	}
 	userHeaderByte, err := json.Marshal(userHeader)
@@ -133,5 +132,5 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	if err = rediscli.Set(ctx, "login:password:"+uuid, code, duration); err != nil {
 		return
 	}
-	return &user.CaptchaResponse{CaptchaEnabled: true, Img: uuid, Uuid: imgBase64}, nil
+	return &user.CaptchaResponse{CaptchaEnabled: true, Img: imgBase64, Uuid: uuid}, nil
 }

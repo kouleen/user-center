@@ -7,6 +7,13 @@ import (
 	"github.com/kouleen/user-center/modle"
 )
 
+func GetUserHeader(ctx context.Context, id int64) (resp *modle.UserHeader, err error) {
+	if err = mysql.GetReadMysqlDDB().WithContext(ctx).First(&resp, id).Error; err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func GetUserHeaderByUsername(ctx context.Context, username string) (resp *modle.UserHeader, err error) {
 	if err = mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserHeader{}).Where("is_delete = 0 and username = ?", username).First(&resp).Error; err != nil {
 		return

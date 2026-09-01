@@ -22,7 +22,7 @@ func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginRespons
 	if err = checkLoginParams(ctx, req); err != nil {
 		return nil, err
 	}
-	loginProcess, ok := loginProcessMap[req.GetLoginType()]
+	loginProcess, ok := loginProcessMap[user.LoginType(req.GetLoginType())]
 	if !ok {
 		return nil, errors.New("not found")
 	}
@@ -47,7 +47,7 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 	if req.GetCode() == "" {
 		return errors.New("code is empty")
 	}
-	switch req.GetLoginType() {
+	switch user.LoginType(req.GetLoginType()) {
 	case user.LoginType_LOGIN_PHONE:
 		if req.GetPhone() == "" {
 			return errors.New("phone is empty")
