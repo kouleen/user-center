@@ -9,6 +9,7 @@ import (
 
 func QueryUserHeaderInfo(ctx context.Context, id int64) (resp *user.UserHeaderResponse, err error) {
 	header, err := repository.GetUserHeader(ctx, id)
+
 	if err != nil {
 		return nil, err
 	}
