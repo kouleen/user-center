@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
@@ -47,7 +48,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 		}
 	}
 	// 删除验证码
-	if err = rediscli.Del(ctx, "login:phone:"+loginRequest.GetPhone()); err != nil {
+	if err = rediscli.Del(ctx, loginRequest.GetPhone()); err != nil {
 		return
 	}
 	if userHeader.Status == 0 {
@@ -87,7 +88,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 		return
 	}
 	// 删除验证码
-	if err = rediscli.Del(ctx, "login:password:"+loginRequest.GetUuid()); err != nil {
+	if err = rediscli.Del(ctx, loginRequest.GetUuid()); err != nil {
 		return
 	}
 	// 对比密码
@@ -129,8 +130,107 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	imgBase64 := utils.CreateCaptchaSvg(code)
 	// 验证码保留60秒
 	duration := time.Duration(60) * time.Second
-	if err = rediscli.Set(ctx, "login:password:"+uuid, code, duration); err != nil {
+	if err = rediscli.Set(ctx, uuid, code, duration); err != nil {
 		return
 	}
-	return &user.CaptchaResponse{CaptchaEnabled: true, Img: imgBase64, Uuid: uuid}, nil
+	return &user.CaptchaResponse{
+		CaptchaEnabled: true,
+		Img:            imgBase64,
+		Uuid:           uuid,
+	}, nil
+}
+
+func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
+	limit, err := rediscli.Get(ctx, phone+"-limit")
+	if err != nil {
+		return
+	}
+	if limit != "" {
+		duration, err := rediscli.Ttl(ctx, phone+"-limit")
+		if err != nil {
+			return 0, err
+		}
+		return duration.Milliseconds(), nil
+	}
+	smsCode := utils.GenerateRandomByNumCode(6)
+
+	// 此处调用短信验证码发送接口 ，发送短信验证码
+
+	// 设置过期时间5分钟
+	expire := time.Duration(5) * time.Minute
+	if err := rediscli.Set(ctx, phone, smsCode, expire); err != nil {
+		return 0, err
+	}
+	// 限流一分钟
+	limitExpire := time.Minute
+	if err := rediscli.Set(ctx, phone+"-limit", "1", limitExpire); err != nil {
+		return 0, err
+	}
+	return limitExpire.Milliseconds(), nil
+}
+
+func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+	captchaCode, err := rediscli.Get(ctx, req.Uuid)
+	if err != nil {
+		return nil, err
+	}
+	if captchaCode == "" || !strings.EqualFold(captchaCode, req.Code) {
+		return nil, errors.New("验证码已过期")
+	}
+	userHeader, err := repository.GetUserHeaderByUsername(ctx, req.Username)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if userHeader != nil {
+		return nil, errors.New("该用户名已被注册！")
+	}
+	if req.Phone != "" {
+		userHeader, err = repository.GetUserHeaderByPhone(ctx, req.Phone)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		if userHeader != nil {
+			return nil, errors.New("该手机号已被注册！")
+		}
+	}
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		return nil, err
+	}
+	id := node.Generate().Int64()
+	password := string(hashPwd)
+	if err = repository.CreateUserHeader(ctx, &modle.UserHeader{
+		Username: req.Username,
+		Password: password,
+		Nickname: req.Nickname,
+		Phone:    req.Phone,
+		Gender:   uint8(req.Gender),
+	}); err != nil {
+		return nil, err
+	}
+	userHeader, err = repository.GetUserHeaderByUsername(ctx, req.Username)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if userHeader == nil {
+		return nil, errors.New("注册失败！")
+	}
+	userHeader.ID = id
+	bytes, err := json.Marshal(userHeader)
+	if err != nil {
+		return nil, err
+	}
+	uuid := utils.GenerateUUID()
+	duration := time.Duration(24) * time.Hour
+	if err := rediscli.Set(ctx, uuid, string(bytes), duration); err != nil {
+		return nil, err
+	}
+	return &user.LoginResponse{
+		AccessToken: uuid,
+		ExpireTime:  duration.Microseconds(),
+	}, nil
 }

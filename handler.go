@@ -17,9 +17,8 @@ func (s *UserServiceImpl) Captcha(ctx context.Context, req *user.LoginRequest) (
 }
 
 // SmsCode implements the UserServiceImpl interface.
-func (s *UserServiceImpl) SmsCode(ctx context.Context, phone string) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+func (s *UserServiceImpl) SmsCode(ctx context.Context, phone string) (resp int64, err error) {
+	return handle.SmsCode(ctx, phone)
 }
 
 // Login implements the UserServiceImpl interface.
@@ -28,15 +27,13 @@ func (s *UserServiceImpl) Login(ctx context.Context, req *user.LoginRequest) (re
 }
 
 // Register implements the UserServiceImpl interface.
-func (s *UserServiceImpl) Register(ctx context.Context, req *user.RegisterRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+func (s *UserServiceImpl) Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+	return handle.Register(ctx, req)
 }
 
 // ResetPwd implements the UserServiceImpl interface.
 func (s *UserServiceImpl) ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+	return handle.ResetPwd(ctx, req)
 }
 
 // Logout implements the UserServiceImpl interface.

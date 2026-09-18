@@ -3,6 +3,7 @@ package handle
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/kouleen/common/pkg/redis"
@@ -37,8 +38,21 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	return service.Captcha(ctx, req)
 }
 
-func SendSmsCode(ctx context.Context, loginRequest *user.LoginRequest) (resp bool, err error) {
-	return
+var phoneRegex = regexp.MustCompile(`^1[3-9]\d{9}$`)
+
+func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
+	if phoneRegex.MatchString(phone) {
+		return 0, errors.New("invalid phone number")
+	}
+	return service.SmsCode(ctx, phone)
+}
+
+func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+	return service.Register(ctx, req)
+}
+
+func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
+	return false, nil
 }
 
 func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
@@ -53,7 +67,7 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if req.GetPhone() == "" {
 			return errors.New("phone is empty")
 		}
-		captchaCode, err := redis.Get(ctx, "login:phone:"+req.GetPhone())
+		captchaCode, err := redis.Get(ctx, req.GetPhone())
 		if err != nil {
 			return err
 		}
@@ -70,7 +84,7 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if req.GetUuid() == "" {
 			return errors.New("uuid is empty")
 		}
-		captchaCode, err := redis.Get(ctx, "login:password:"+req.GetUuid())
+		captchaCode, err := redis.Get(ctx, req.GetUuid())
 		if err != nil {
 			return err
 		}
