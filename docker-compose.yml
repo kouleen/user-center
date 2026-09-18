@@ -10,9 +10,14 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_DB=${REDIS_DB}
     networks:
-      - go-server-internal
+      - etcd-internal
+      - redis-internal
+      - mysql-internal
 networks:
-  go-server-internal:
+  etcd-internal:
     external: true
-    name: go-server-internal
+  redis-internal:
+    external: true
+  mysql-internal:
+    external: true
 
