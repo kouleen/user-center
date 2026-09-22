@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/kouleen/common/pkg/ctxutil"
 	"github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/service"
@@ -48,11 +49,51 @@ func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
 }
 
 func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+	if err = checkRegister(req); err != nil {
+		return nil, err
+	}
 	return service.Register(ctx, req)
 }
 
 func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
-	return false, nil
+	if err = checkResetPwd(req); err != nil {
+		return false, err
+	}
+	return service.ResetPwd(ctx, req)
+}
+
+func Logout(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
+	id := ctxutil.GetUserId(ctx)
+	return service.Logout(ctx, id)
+}
+
+func checkRegister(req *user.RegisterRequest) error {
+	if req.GetUsername() == "" {
+		return errors.New("empty username")
+	}
+	if req.GetPassword() == "" {
+		return errors.New("empty password")
+	}
+	if req.GetNickname() == "" {
+		return errors.New("empty nickname")
+	}
+	if req.GetCode() == "" {
+		return errors.New("empty code")
+	}
+	return nil
+}
+
+func checkResetPwd(req *user.LoginRequest) error {
+	if req.GetPassword() == "" {
+		return errors.New("empty password")
+	}
+	if req.GetPhone() == "" {
+		return errors.New("empty phone")
+	}
+	if req.GetCode() == "" {
+		return errors.New("empty code")
+	}
+	return nil
 }
 
 func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {

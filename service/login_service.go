@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	rediscli "github.com/kouleen/common/pkg/redis"
+	"github.com/kouleen/idl/kitex_gen/common"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
 	"github.com/kouleen/user-center/repository"
@@ -51,7 +52,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 	if err = rediscli.Del(ctx, loginRequest.GetPhone()); err != nil {
 		return
 	}
-	if userHeader.Status == 0 {
+	if common.BaseStatus_DISABLED == common.BaseStatus(userHeader.GetStatus()) {
 		return nil, errors.New("this account has been deactivated")
 	}
 	userHeaderByte, err := json.Marshal(userHeader)
@@ -95,7 +96,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	if err = bcrypt.CompareHashAndPassword([]byte(userHeader.Password), []byte(loginRequest.Password)); err != nil {
 		return
 	}
-	if userHeader.Status == 0 {
+	if common.BaseStatus_DISABLED == common.BaseStatus(userHeader.GetStatus()) {
 		return nil, errors.New("this account has been deactivated")
 	}
 	userHeaderByte, err := json.Marshal(userHeader)
@@ -204,11 +205,11 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	id := node.Generate().Int64()
 	password := string(hashPwd)
 	if err = repository.CreateUserHeader(ctx, &modle.UserHeader{
-		Username: req.Username,
+		Username: req.GetUsername(),
 		Password: password,
-		Nickname: req.Nickname,
-		Phone:    req.Phone,
-		Gender:   uint8(req.Gender),
+		Nickname: req.GetNickname(),
+		Phone:    req.GetPhone(),
+		Gender:   req.Gender,
 	}); err != nil {
 		return nil, err
 	}
@@ -233,4 +234,38 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 		AccessToken: uuid,
 		ExpireTime:  duration.Microseconds(),
 	}, nil
+}
+
+func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
+	smsCode, err := rediscli.Get(ctx, req.Phone)
+	if err != nil {
+		return false, err
+	}
+	if smsCode == "" || !strings.EqualFold(smsCode, req.Code) {
+		return false, errors.New("验证码已过期")
+	}
+	userHeader, err := repository.GetUserHeaderByPhone(ctx, req.Phone)
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, err
+	}
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return false, err
+	}
+	userHeader.Password = string(hashPwd)
+	if err = repository.UpdatePassword(ctx, userHeader); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func Logout(ctx context.Context, id int64) (resp bool, err error) {
+	token, err := rediscli.Get(ctx, strconv.FormatInt(id, 10))
+	if err != nil {
+		return false, err
+	}
+	if err = rediscli.Del(ctx, token); err != nil {
+		return false, err
+	}
+	return true, nil
 }

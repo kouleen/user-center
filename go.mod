@@ -5,8 +5,8 @@ go 1.25.0
 require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cloudwego/kitex v0.16.3
-	github.com/kouleen/common v0.0.21
-	github.com/kouleen/idl v0.0.17
+	github.com/kouleen/common v0.0.25
+	github.com/kouleen/idl v0.0.26
 	github.com/redis/go-redis/v9 v9.22.0
 	golang.org/x/crypto v0.36.0
 	gorm.io/gorm v1.31.2

@@ -1,6 +1,10 @@
 package modle
 
-import "time"
+import (
+	"time"
+
+	"github.com/kouleen/idl/kitex_gen/user"
+)
 
 type UserPosition struct {
 	ID          int64      `json:"id,string" gorm:"column:id;primary_key;not null"`
@@ -14,13 +18,33 @@ type UserPosition struct {
 	FullAddress string     `json:"full_address" gorm:"column:full_address;default:''"` // 完整地址
 	Country     string     `json:"country" gorm:"column:country;default:''"`           // 国家
 	CountryCode string     `json:"country_code" gorm:"column:country_code;default:''"` // 国家代码
-	IsDelete    uint8      `json:"isDelete" gorm:"column:is_delete;not null;default:0"`
+	IsDelete    *int8      `json:"isDelete" gorm:"column:is_delete;not null;default:0"`
 	CreatedBy   int64      `json:"createdBy,string" gorm:"column:created_by;not null;default:-1"`
 	UpdatedBy   int64      `json:"updatedBy,string" gorm:"column:updated_by;not null;default:-1"`
 	CreateTime  *time.Time `json:"createTime" gorm:"column:create_time;default:CURRENT_TIMESTAMP"`
 	UpdateTime  *time.Time `json:"updateTime" gorm:"column:update_time;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"`
 }
 
-func (UserPosition) TableName() string {
+func (p *UserPosition) TableName() string {
 	return "user_position"
+}
+
+func (p *UserPosition) ConvertResp() *user.UserPositionResponse {
+	return &user.UserPositionResponse{
+		Id:          p.ID,
+		UserId:      p.UserID,
+		Longitude:   p.Longitude,
+		Latitude:    p.Latitude,
+		Province:    p.Province,
+		City:        p.City,
+		District:    p.District,
+		Street:      p.Street,
+		FullAddress: p.FullAddress,
+		Country:     p.Country,
+		CountryCode: p.CountryCode,
+		IsDelete:    p.IsDelete,
+		CreatedBy:   p.CreatedBy,
+		UpdatedBy:   p.UpdatedBy,
+		CreateTime:  p.CreateTime.UnixMilli(),
+	}
 }

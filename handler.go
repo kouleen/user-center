@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kouleen/idl/kitex_gen/user"
-	"github.com/kouleen/idl/kitex_gen/user_position"
 	"github.com/kouleen/user-center/handle"
 )
 
@@ -38,20 +37,17 @@ func (s *UserServiceImpl) ResetPwd(ctx context.Context, req *user.LoginRequest) 
 
 // Logout implements the UserServiceImpl interface.
 func (s *UserServiceImpl) Logout(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+	return handle.Logout(ctx, req)
 }
 
 // QueryUserHeaderPage implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserHeaderPage(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderPageResponse, err error) {
-	// TODO: Your code here...
-	return
+	return handle.QueryUserHeaderPage(ctx, req)
 }
 
 // QueryUserHeaderList implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserHeaderList(ctx context.Context, req *user.UserHeaderRequest) (resp []*user.UserHeaderResponse, err error) {
-	// TODO: Your code here...
-	return
+	return handle.QueryUserHeaderList(ctx, req)
 }
 
 // QueryUserHeaderInfo implements the UserServiceImpl interface.
@@ -60,24 +56,31 @@ func (s *UserServiceImpl) QueryUserHeaderInfo(ctx context.Context, req *user.Use
 }
 
 // QueryUserPositionPage implements the UserServiceImpl interface.
-func (s *UserServiceImpl) QueryUserPositionPage(ctx context.Context, req *user_position.UserPositionRequest) (resp *user_position.UserPositionPageResponse, err error) {
+func (s *UserServiceImpl) QueryUserPositionPage(ctx context.Context, req *user.UserPositionRequest) (resp *user.UserPositionPageResponse, err error) {
 	return handle.QueryPositionPage(ctx, req)
 }
 
+// QueryUserPositionList implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserPositionList(ctx context.Context, req *user.UserPositionRequest) (resp []*user.UserPositionResponse, err error) {
+	return handle.QueryPositionList(ctx, req)
+}
+
+// QueryUserPosition implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp *user.UserPositionResponse, err error) {
+	return handle.QueryPosition(ctx, req)
+}
+
 // SaveUserPosition implements the UserServiceImpl interface.
-func (s *UserServiceImpl) SaveUserPosition(ctx context.Context, req *user_position.UserPositionRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+func (s *UserServiceImpl) SaveUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
+	return handle.SaveUserPosition(ctx, req)
 }
 
 // UpdateUserPosition implements the UserServiceImpl interface.
-func (s *UserServiceImpl) UpdateUserPosition(ctx context.Context, req *user_position.UserPositionRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+func (s *UserServiceImpl) UpdateUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
+	return handle.UpdateUserPosition(ctx, req)
 }
 
 // DeleteUserPosition implements the UserServiceImpl interface.
-func (s *UserServiceImpl) DeleteUserPosition(ctx context.Context, req *user_position.UserPositionRequest) (resp bool, err error) {
-	// TODO: Your code here...
-	return
+func (s *UserServiceImpl) DeleteUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
+	return handle.DeleteUserPosition(ctx, req)
 }
