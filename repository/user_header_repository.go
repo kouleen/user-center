@@ -6,11 +6,21 @@ import (
 	"github.com/kouleen/common/pkg/mysql"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
+	"github.com/kouleen/user-center/utils"
 	"gorm.io/gorm"
 )
 
 func QueryUserHeaderPage(ctx context.Context, req *user.UserHeaderRequest) (resp []*modle.UserHeader, total int64, err error) {
 	query := getUserHeaderQuery(ctx, req)
+	if req.Params != nil {
+		if req.GetParams().GetBeginTime() != "" && req.GetParams().GetEndTime() != "" {
+			startUTC, endUTC, err := utils.DateToLocalRange(req.GetParams().GetBeginTime(), req.GetParams().GetEndTime())
+			if err != nil {
+				return nil, 0, err
+			}
+			query = query.Where("create_time between ? and ?", startUTC, endUTC)
+		}
+	}
 	if err = query.Count(&total).Error; err != nil || total == 0 {
 		return
 	}
@@ -41,6 +51,15 @@ func getUserHeaderQuery(ctx context.Context, req *user.UserHeaderRequest) *gorm.
 
 func QueryUserHeaderList(ctx context.Context, req *user.UserHeaderRequest) (resp []*modle.UserHeader, err error) {
 	query := getUserHeaderQuery(ctx, req)
+	if req.Params != nil {
+		if req.GetParams().GetBeginTime() != "" && req.GetParams().GetEndTime() != "" {
+			startUTC, endUTC, err := utils.DateToLocalRange(req.GetParams().GetBeginTime(), req.GetParams().GetEndTime())
+			if err != nil {
+				return nil, err
+			}
+			query = query.Where("create_time between ? and ?", startUTC, endUTC)
+		}
+	}
 	query = query.Order("create_time desc")
 	if err = query.Find(&resp).Error; err != nil {
 		return

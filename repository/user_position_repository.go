@@ -6,11 +6,21 @@ import (
 	"github.com/kouleen/common/pkg/mysql"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
+	"github.com/kouleen/user-center/utils"
 	"gorm.io/gorm"
 )
 
 func QueryPositionPage(ctx context.Context, req *user.UserPositionRequest) (list []modle.UserPosition, total int64, err error) {
 	query := getPositionQuery(ctx, req)
+	if req.Params != nil {
+		if req.GetParams().GetBeginTime() != "" && req.GetParams().GetEndTime() != "" {
+			startUTC, endUTC, err := utils.DateToLocalRange(req.GetParams().GetBeginTime(), req.GetParams().GetEndTime())
+			if err != nil {
+				return nil, 0, err
+			}
+			query = query.Where("create_time between ? and ?", startUTC, endUTC)
+		}
+	}
 	if err = query.Count(&total).Error; err != nil {
 		return
 	}
@@ -49,7 +59,17 @@ func getPositionQuery(ctx context.Context, req *user.UserPositionRequest) *gorm.
 }
 
 func QueryPositionList(ctx context.Context, req *user.UserPositionRequest) (list []modle.UserPosition, err error) {
-	query := getPositionQuery(ctx, req).Order("create_time desc")
+	query := getPositionQuery(ctx, req)
+	if req.Params != nil {
+		if req.GetParams().GetBeginTime() != "" && req.GetParams().GetEndTime() != "" {
+			startUTC, endUTC, err := utils.DateToLocalRange(req.GetParams().GetBeginTime(), req.GetParams().GetEndTime())
+			if err != nil {
+				return nil, err
+			}
+			query = query.Where("create_time between ? and ?", startUTC, endUTC)
+		}
+	}
+	query.Order("create_time desc")
 	if err = query.Find(&list).Error; err != nil {
 		return
 	}
