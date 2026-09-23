@@ -75,3 +75,38 @@ func QueryPositionList(ctx context.Context, req *user.UserPositionRequest) (list
 	}
 	return
 }
+
+func QueryPositionById(ctx context.Context, id int64) (resp *modle.UserPosition, err error) {
+	if err = mysql.GetReadMysqlDDB().WithContext(ctx).First(&resp, id).Error; err != nil {
+		return
+	}
+	return
+}
+
+func QueryPositionByIdList(ctx context.Context, ids []int64) (list []*modle.UserPosition, err error) {
+	if err = mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Where("id in (?)", ids).Find(&list).Error; err != nil {
+		return
+	}
+	return
+}
+
+func CreatePosition(ctx context.Context, entity *modle.UserPosition) (err error) {
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Create(entity).Error
+}
+
+func UpdatePosition(ctx context.Context, entity *modle.UserPosition) (err error) {
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Where("id = ?", entity.ID).Updates(entity).Error
+}
+
+func BatchUpdatePosition(ctx context.Context, entityList []*modle.UserPosition) (err error) {
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(entityList) > 0 {
+			for _, position := range entityList {
+				if err = tx.Model(&modle.UserPosition{}).Where("id = ?", position.ID).Updates(position).Error; err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}

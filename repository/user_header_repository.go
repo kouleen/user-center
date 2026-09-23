@@ -33,7 +33,10 @@ func QueryUserHeaderPage(ctx context.Context, req *user.UserHeaderRequest) (resp
 }
 
 func getUserHeaderQuery(ctx context.Context, req *user.UserHeaderRequest) *gorm.DB {
-	query := mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserHeader{}).Where("is_deleted = 0")
+	query := mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserHeader{}).Where("is_delete = 0")
+	if len(req.GetUserIdList()) > 0 {
+		query = query.Where("id IN (?)", req.GetUserIdList())
+	}
 	if req.Status != nil {
 		query = query.Where("status = ?", req.GetStatus())
 	}
@@ -42,6 +45,9 @@ func getUserHeaderQuery(ctx context.Context, req *user.UserHeaderRequest) *gorm.
 	}
 	if req.GetUsername() != "" {
 		query = query.Where("username like ?", req.GetUsername()+"%")
+	}
+	if req.GetPhone() != "" {
+		query = query.Where("phone like ?", req.GetPhone()+"%")
 	}
 	if req.GetNickname() != "" {
 		query = query.Where("nickname like ?", "%"+req.GetNickname()+"%")

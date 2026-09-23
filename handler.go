@@ -72,15 +72,15 @@ func (s *UserServiceImpl) QueryUserPosition(ctx context.Context, req *user.UserP
 
 // SaveUserPosition implements the UserServiceImpl interface.
 func (s *UserServiceImpl) SaveUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
-	return handle.SaveUserPosition(ctx, req)
+	return handle.SavePosition(ctx, req)
 }
 
 // UpdateUserPosition implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UpdateUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
-	return handle.UpdateUserPosition(ctx, req)
+	return handle.UpdatePosition(ctx, req)
 }
 
 // DeleteUserPosition implements the UserServiceImpl interface.
 func (s *UserServiceImpl) DeleteUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
-	return handle.DeleteUserPosition(ctx, req)
+	return handle.DeletePosition(ctx, req)
 }
