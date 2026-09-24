@@ -49,7 +49,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 		}
 	}
 	// 删除验证码
-	if err = rediscli.Del(ctx, loginRequest.GetPhone()); err != nil {
+	if _, err = rediscli.Unlink(ctx, loginRequest.GetPhone()); err != nil {
 		return
 	}
 	if common.BaseStatus_DISABLED == common.BaseStatus(userHeader.GetStatus()) {
@@ -66,7 +66,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 	if err != nil {
 		return nil, err
 	}
-	if err = rediscli.Del(ctx, token); err != nil {
+	if _, err = rediscli.Unlink(ctx, token); err != nil {
 		return nil, err
 	}
 	if err = rediscli.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
@@ -89,7 +89,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 		return
 	}
 	// 删除验证码
-	if err = rediscli.Del(ctx, loginRequest.GetUuid()); err != nil {
+	if _, err = rediscli.Unlink(ctx, loginRequest.GetUuid()); err != nil {
 		return
 	}
 	// 对比密码
@@ -110,7 +110,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
-	if err = rediscli.Del(ctx, token); err != nil {
+	if _, err = rediscli.Unlink(ctx, token); err != nil {
 		return nil, err
 	}
 	if err = rediscli.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
@@ -264,7 +264,7 @@ func Logout(ctx context.Context, id int64) (resp bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	if err = rediscli.Del(ctx, token); err != nil {
+	if _, err = rediscli.Unlink(ctx, token); err != nil {
 		return false, err
 	}
 	return true, nil

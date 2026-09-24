@@ -104,7 +104,8 @@ jobs:
                 "MYSQL_SLAVE2_PASSWORD=${{ secrets.MYSQL_SLAVE2_PASSWORD }}",
                 "MYSQL_SLAVE2_HOST=${{ secrets.MYSQL_SLAVE2_HOST }}",
                 "MYSQL_SLAVE2_PORT=${{ secrets.MYSQL_SLAVE2_PORT }}",
-                "MYSQL_SLAVE2_DATABASE=${{ secrets.MYSQL_SLAVE2_DATABASE }}"
+                "MYSQL_SLAVE2_DATABASE=${{ secrets.MYSQL_SLAVE2_DATABASE }}",
+                "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
             ],
             "volumeBinds": [],
             "cmdOverride": []
@@ -209,7 +210,8 @@ jobs:
                 "MYSQL_SLAVE2_PASSWORD=${{ secrets.MYSQL_SLAVE2_PASSWORD }}",
                 "MYSQL_SLAVE2_HOST=${{ secrets.MYSQL_SLAVE2_HOST }}",
                 "MYSQL_SLAVE2_PORT=${{ secrets.MYSQL_SLAVE2_PORT }}",
-                "MYSQL_SLAVE2_DATABASE=${{ secrets.MYSQL_SLAVE2_DATABASE }}"
+                "MYSQL_SLAVE2_DATABASE=${{ secrets.MYSQL_SLAVE2_DATABASE }}",
+                "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
             ],
             "volumeBinds": [],
             "cmdOverride": []

@@ -2,14 +2,21 @@ package handle
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/bytedance/gopkg/util/logger"
+	"github.com/google/uuid"
+	"github.com/kouleen/common/message"
 	"github.com/kouleen/common/pkg/ctxutil"
 	"github.com/kouleen/common/pkg/redis"
+	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/service"
+	"github.com/kouleen/user-center/utils"
 )
 
 type LoginProcess interface {
@@ -22,6 +29,43 @@ var loginProcessMap = map[user.LoginType]LoginProcess{
 }
 
 func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginResponse, err error) {
+	loginResponse, err := handleLogin(ctx, req)
+	os, browser := utils.ParseUA(ctx)
+	systemLoginLog := &system.SystemLoginLogRequest{
+		Username: req.GetUsername(),
+		Ip:       utils.GetClientIp(ctx),
+		Os:       os,
+		Browser:  browser,
+	}
+	status := int8(1)
+	systemLoginLog.Remark = "登录成功"
+	if err == nil {
+		systemLoginLog.Token = loginResponse.AccessToken
+	}
+	if err != nil {
+		status = int8(0)
+		systemLoginLog.Remark = err.Error()
+	}
+	systemLoginLog.Status = &status
+	messageByte, errMarshal := json.Marshal(&systemLoginLog)
+	if errMarshal != nil {
+		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
+		return
+	}
+	if err = message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
+		TraceID:     ctxutil.GetTraceId(ctx),
+		MessageID:   strconv.Itoa(int(uuid.New().ID())),
+		ContentType: "application/json",
+		Body:        messageByte,
+		Headers:     make(map[string]any),
+	}); err != nil {
+		logger.CtxErrorf(ctx, "send login log error: %v", err)
+		return
+	}
+	return loginResponse, err
+}
+
+func handleLogin(ctx context.Context, req *user.LoginRequest) (resp *user.LoginResponse, err error) {
 	if err = checkLoginParams(ctx, req); err != nil {
 		return nil, err
 	}

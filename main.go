@@ -6,6 +6,7 @@ import (
 	"github.com/kouleen/common/middleware"
 	"github.com/kouleen/idl/kitex_gen/rpc"
 	"github.com/kouleen/idl/kitex_gen/user/userservice"
+	_ "github.com/kouleen/user-center/message"
 )
 
 func main() {
