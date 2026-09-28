@@ -50,17 +50,17 @@ func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginRespons
 	messageByte, errMarshal := json.Marshal(&systemLoginLog)
 	if errMarshal != nil {
 		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
-		return
+		return nil, errMarshal
 	}
-	if err = message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
+	if msgErr := message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
 		TraceID:     ctxutil.GetTraceId(ctx),
 		MessageID:   strconv.Itoa(int(uuid.New().ID())),
 		ContentType: "application/json",
 		Body:        messageByte,
 		Headers:     make(map[string]any),
-	}); err != nil {
+	}); msgErr != nil {
 		logger.CtxErrorf(ctx, "send login log error: %v", err)
-		return
+		return nil, msgErr
 	}
 	return loginResponse, err
 }
