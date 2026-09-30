@@ -7,8 +7,8 @@ require (
 	github.com/bytedance/gopkg v0.1.4
 	github.com/cloudwego/kitex v0.16.3
 	github.com/google/uuid v1.6.0
-	github.com/kouleen/common v0.0.45
-	github.com/kouleen/idl v0.0.33
+	github.com/kouleen/common v0.0.48
+	github.com/kouleen/idl v0.0.36
 	github.com/mileusna/useragent v1.3.5
 	github.com/redis/go-redis/v9 v9.22.0
 	golang.org/x/crypto v0.36.0

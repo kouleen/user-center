@@ -253,18 +253,22 @@ func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error
 		return false, err
 	}
 	userHeader.Password = string(hashPwd)
-	if err = repository.UpdatePassword(ctx, userHeader); err != nil {
+	if err = repository.UpdateUserHeader(ctx, userHeader); err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
 func Logout(ctx context.Context, id int64) (resp bool, err error) {
-	token, err := rediscli.Get(ctx, strconv.FormatInt(id, 10))
+	userIdStr := strconv.FormatInt(id, 10)
+	token, err := rediscli.Get(ctx, userIdStr)
 	if err != nil {
 		return false, err
 	}
 	if _, err = rediscli.Unlink(ctx, token); err != nil {
+		return false, err
+	}
+	if _, err = rediscli.Unlink(ctx, userIdStr); err != nil {
 		return false, err
 	}
 	return true, nil

@@ -55,6 +55,16 @@ func (s *UserServiceImpl) QueryUserHeaderInfo(ctx context.Context, req *user.Use
 	return handle.QueryUserHeaderInfo(ctx, req)
 }
 
+// UpdateUserHeaderStatus implements the UserServiceImpl interface.
+func (s *UserServiceImpl) UpdateUserHeaderStatus(ctx context.Context, req *user.UserHeaderRequest) (resp bool, err error) {
+	return handle.UpdateUserHeaderStatus(ctx, req)
+}
+
+// DeleteUserHeader implements the UserServiceImpl interface.
+func (s *UserServiceImpl) DeleteUserHeader(ctx context.Context, req *user.UserHeaderRequest) (resp bool, err error) {
+	return handle.DeleteUserHeader(ctx, req)
+}
+
 // QueryUserPositionPage implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserPositionPage(ctx context.Context, req *user.UserPositionRequest) (resp *user.UserPositionPageResponse, err error) {
 	return handle.QueryPositionPage(ctx, req)
@@ -83,4 +93,34 @@ func (s *UserServiceImpl) UpdateUserPosition(ctx context.Context, req *user.User
 // DeleteUserPosition implements the UserServiceImpl interface.
 func (s *UserServiceImpl) DeleteUserPosition(ctx context.Context, req *user.UserPositionRequest) (resp bool, err error) {
 	return handle.DeletePosition(ctx, req)
+}
+
+// QueryUserIdentityPage implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserIdentityPage(ctx context.Context, req *user.UserIdentityRequest) (resp *user.UserIdentityPageResponse, err error) {
+	return handle.QueryIdentityPage(ctx, req)
+}
+
+// QueryUserIdentityList implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserIdentityList(ctx context.Context, req *user.UserIdentityRequest) (resp []*user.UserIdentityResponse, err error) {
+	return handle.QueryIdentityList(ctx, req)
+}
+
+// QueryUserIdentity implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserIdentity(ctx context.Context, req *user.UserIdentityRequest) (resp *user.UserIdentityResponse, err error) {
+	return handle.QueryIdentity(ctx, req)
+}
+
+// SaveUserIdentity implements the UserServiceImpl interface.
+func (s *UserServiceImpl) SaveUserIdentity(ctx context.Context, req *user.UserIdentityRequest) (resp bool, err error) {
+	return handle.SaveIdentity(ctx, req)
+}
+
+// UpdateUserIdentity implements the UserServiceImpl interface.
+func (s *UserServiceImpl) UpdateUserIdentity(ctx context.Context, req *user.UserIdentityRequest) (resp bool, err error) {
+	return handle.UpdateIdentity(ctx, req)
+}
+
+// DeleteUserIdentity implements the UserServiceImpl interface.
+func (s *UserServiceImpl) DeleteUserIdentity(ctx context.Context, req *user.UserIdentityRequest) (resp bool, err error) {
+	return handle.DeleteIdentity(ctx, req)
 }

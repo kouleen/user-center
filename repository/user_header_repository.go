@@ -80,6 +80,13 @@ func GetUserHeaderById(ctx context.Context, id int64) (resp *modle.UserHeader, e
 	return resp, nil
 }
 
+func GetUserHeaderByIdList(ctx context.Context, ids []int64) (resp []*modle.UserHeader, err error) {
+	if err = mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserHeader{}).Where("id in (?)", ids).Find(&resp).Error; err != nil {
+		return
+	}
+	return
+}
+
 func GetUserHeaderByUsername(ctx context.Context, username string) (resp *modle.UserHeader, err error) {
 	if err = mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserHeader{}).Where("is_delete = 0 and username = ?", username).First(&resp).Error; err != nil {
 		return
@@ -101,9 +108,22 @@ func CreateUserHeader(ctx context.Context, userHeader *modle.UserHeader) error {
 	return nil
 }
 
-func UpdatePassword(ctx context.Context, userHeader *modle.UserHeader) error {
-	if err := mysql.GetWriteMysqlDDB().WithContext(ctx).Model(userHeader).Updates(userHeader).Error; err != nil {
+func UpdateUserHeader(ctx context.Context, userHeader *modle.UserHeader) error {
+	if err := mysql.GetWriteMysqlDDB().WithContext(ctx).Model(userHeader).Save(userHeader).Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func BatchUpdateUserHeader(ctx context.Context, entityList []*modle.UserHeader) (err error) {
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(entityList) > 0 {
+			for _, item := range entityList {
+				if err = tx.Model(&modle.UserHeader{}).Where("id = ?", item.ID).Save(item).Error; err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
 }

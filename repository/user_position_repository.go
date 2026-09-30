@@ -95,14 +95,14 @@ func CreatePosition(ctx context.Context, entity *modle.UserPosition) (err error)
 }
 
 func UpdatePosition(ctx context.Context, entity *modle.UserPosition) (err error) {
-	return mysql.GetWriteMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Where("id = ?", entity.ID).Updates(entity).Error
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Where("id = ?", entity.ID).Save(entity).Error
 }
 
 func BatchUpdatePosition(ctx context.Context, entityList []*modle.UserPosition) (err error) {
 	return mysql.GetWriteMysqlDDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if len(entityList) > 0 {
 			for _, position := range entityList {
-				if err = tx.Model(&modle.UserPosition{}).Where("id = ?", position.ID).Updates(position).Error; err != nil {
+				if err = tx.Model(&modle.UserPosition{}).Where("id = ?", position.ID).Save(position).Error; err != nil {
 					return err
 				}
 			}
