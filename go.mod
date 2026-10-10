@@ -7,7 +7,7 @@ require (
 	github.com/bytedance/gopkg v0.1.4
 	github.com/cloudwego/kitex v0.16.3
 	github.com/google/uuid v1.6.0
-	github.com/kouleen/common v0.0.48
+	github.com/kouleen/common v0.0.49
 	github.com/kouleen/idl v0.0.36
 	github.com/mileusna/useragent v1.3.5
 	github.com/redis/go-redis/v9 v9.22.0
@@ -46,7 +46,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kitex-contrib/registry-etcd v0.3.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
-	github.com/luci/go-render v0.0.0-20160219211803-9a04cc21af0f // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
