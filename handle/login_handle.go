@@ -13,6 +13,7 @@ import (
 	"github.com/kouleen/common/message"
 	"github.com/kouleen/common/pkg/ctxutil"
 	"github.com/kouleen/common/pkg/redis"
+	"github.com/kouleen/idl/kitex_gen/common"
 	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/service"
@@ -106,8 +107,17 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 		Os:       os,
 		Browser:  browser,
 	}
+	systemOperateLog := &system.SystemOperateLogRequest{
+		Module:   "USER_MODULE",
+		Business: "用户注册",
+		Type:     system.CREATE,
+		Ip:       utils.GetClientIp(ctx),
+		Os:       os,
+		Browser:  browser,
+	}
 	status := int8(1)
 	systemLoginLog.Remark = "注册成功"
+	systemOperateLog.Remark = "注册成功"
 	if err == nil {
 		systemLoginLog.Token = loginResponse.AccessToken
 	}
@@ -123,11 +133,28 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	}
 	traceId := ctxutil.GetTraceId(ctx)
 	go func() {
-		if msgErr := message.SendToQueue(context.Background(), "user.login.log.queue", &message.Message{
+		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_LOGIN_LOG_QUEUE, &message.Message{
 			TraceID:     traceId,
 			MessageID:   strconv.Itoa(int(uuid.New().ID())),
 			ContentType: "application/json",
 			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
+	systemOperateLog.Status = &status
+	operateLogMessageByte, operateLogErrMarshal := json.Marshal(&systemOperateLog)
+	if operateLogErrMarshal != nil {
+		logger.CtxErrorf(ctx, "operateLogErrMarshal: %v", operateLogErrMarshal)
+		return nil, operateLogErrMarshal
+	}
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_OPERATE_LOG_QUEUE, &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        operateLogMessageByte,
 			Headers:     make(map[string]any),
 		}); msgErr != nil {
 			logger.CtxErrorf(ctx, "send login log error: %v", err)
