@@ -37,6 +37,9 @@ func getUserHeaderQuery(ctx context.Context, req *user.UserHeaderRequest) *gorm.
 	if len(req.GetUserIdList()) > 0 {
 		query = query.Where("id IN (?)", req.GetUserIdList())
 	}
+	if req.Id != nil {
+		query = query.Where("id = ?", req.GetId())
+	}
 	if req.Status != nil {
 		query = query.Where("status = ?", req.GetStatus())
 	}
