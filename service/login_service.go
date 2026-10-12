@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/bytedance/gopkg/util/logger"
 	rediscli "github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
 	"github.com/kouleen/idl/kitex_gen/user"
@@ -85,61 +84,41 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 type LoginPwd struct{}
 
 func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
-	allStart := time.Now()
-	start := time.Now()
 	userHeader, err := repository.GetUserHeaderByUsername(ctx, loginRequest.Username)
-	logger.CtxInfof(ctx, "【1-Mysql查询】耗时=%v\n", time.Since(start))
 	if err != nil {
 		return
 	}
 	// 删除验证码
-	start = time.Now()
 	if _, err = rediscli.Unlink(ctx, loginRequest.GetUuid()); err != nil {
 		return
 	}
-	logger.CtxInfof(ctx, "【2-Redis Unlink验证码】耗时=%v", time.Since(start))
 	// 对比密码
-	start = time.Now()
 	if err = bcrypt.CompareHashAndPassword([]byte(userHeader.Password), []byte(loginRequest.Password)); err != nil {
 		return
 	}
-	logger.CtxInfof(ctx, "【3-Bcrypt】耗时=%v", time.Since(start))
-	start = time.Now()
 	if common.BaseStatus_DISABLED == common.BaseStatus(userHeader.GetStatus()) {
 		return nil, errors.New("this account has been deactivated")
 	}
-	logger.CtxInfof(ctx, "【4-账号状态判断】耗时=%v\n", time.Since(start))
-	start = time.Now()
 	userHeaderByte, err := json.Marshal(userHeader)
-	logger.CtxInfof(ctx, "【5-JsonMarshal】耗时=%v\n", time.Since(start))
 	if err != nil {
 		return nil, err
 	}
 	generateUUID := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
 	idStr := strconv.FormatInt(userHeader.ID, 10)
-	start = time.Now()
 	token, err := rediscli.Get(ctx, idStr)
-	logger.CtxInfof(ctx, "【6-Redis Get】耗时=%v, err=%v\n", time.Since(start), err)
 	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
-	start = time.Now()
 	if _, err = rediscli.Unlink(ctx, token); err != nil {
 		return nil, err
 	}
-	logger.CtxInfof(ctx, "【7-Redis Unlink旧token】耗时=%v\n", time.Since(start))
-	start = time.Now()
 	if err = rediscli.Set(ctx, generateUUID, string(userHeaderByte), duration); err != nil {
 		return nil, err
 	}
-	logger.CtxInfof(ctx, "【8-Redis Set user】耗时=%v", time.Since(start))
-	start = time.Now()
 	if err = rediscli.Set(ctx, idStr, generateUUID, duration); err != nil {
 		return nil, err
 	}
-	logger.CtxInfof(ctx, "【9-Redis Set mapping】耗时=%v", time.Since(start))
-	logger.CtxInfof(ctx, "【登录总耗时】%v\n", time.Since(allStart))
 	return &user.LoginResponse{
 		AccessToken: generateUUID,
 		ExpireTime:  duration.Microseconds(),
