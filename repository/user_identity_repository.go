@@ -66,23 +66,17 @@ func QueryIdentityList(ctx context.Context, req *user.UserIdentityRequest) (resp
 
 func QueryIdentityById(ctx context.Context, id int64) (resp *modle.UserIdentity, err error) {
 	if err = mysql.GetReadMysqlDDB().WithContext(ctx).First(&resp, id).Error; err != nil {
-		return
+		return nil, err
 	}
 	return
 }
 
 func CreateIdentity(ctx context.Context, entity *modle.UserIdentity) (err error) {
-	if err = mysql.GetWriteMysqlDDB().WithContext(ctx).Create(entity).Error; err != nil {
-		return
-	}
-	return
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Create(entity).Error
 }
 
 func UpdateIdentity(ctx context.Context, entity *modle.UserIdentity) (err error) {
-	if err = mysql.GetWriteMysqlDDB().WithContext(ctx).Save(entity).Error; err != nil {
-		return
-	}
-	return
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Save(entity).Error
 }
 
 func BatchDeleteIdentity(ctx context.Context, idList []int64) (err error) {

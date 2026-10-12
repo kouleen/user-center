@@ -205,6 +205,7 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	id := node.Generate().Int64()
 	password := string(hashPwd)
 	if err = repository.CreateUserHeader(ctx, &modle.UserHeader{
+		ID:       id,
 		Username: req.GetUsername(),
 		Password: password,
 		Nickname: req.GetNickname(),
@@ -221,6 +222,7 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 		return nil, errors.New("注册失败！")
 	}
 	userHeader.ID = id
+	idStr := strconv.FormatInt(userHeader.ID, 10)
 	bytes, err := json.Marshal(userHeader)
 	if err != nil {
 		return nil, err
@@ -228,6 +230,10 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	uuid := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
 	if err := rediscli.Set(ctx, uuid, string(bytes), duration); err != nil {
+		return nil, err
+	}
+
+	if err = rediscli.Set(ctx, idStr, uuid, duration); err != nil {
 		return nil, err
 	}
 	return &user.LoginResponse{

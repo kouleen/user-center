@@ -96,7 +96,40 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	if err = checkRegister(req); err != nil {
 		return nil, err
 	}
-	return service.Register(ctx, req)
+	loginResponse, err := service.Register(ctx, req)
+	os, browser := utils.ParseUA(ctx)
+	systemLoginLog := &system.SystemLoginLogRequest{
+		Username: req.GetUsername(),
+		Ip:       utils.GetClientIp(ctx),
+		Os:       os,
+		Browser:  browser,
+	}
+	status := int8(1)
+	systemLoginLog.Remark = "注册成功"
+	if err == nil {
+		systemLoginLog.Token = loginResponse.AccessToken
+	}
+	if err != nil {
+		status = int8(0)
+		systemLoginLog.Remark = err.Error()
+	}
+	systemLoginLog.Status = &status
+	messageByte, errMarshal := json.Marshal(&systemLoginLog)
+	if errMarshal != nil {
+		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
+		return nil, errMarshal
+	}
+	if msgErr := message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
+		TraceID:     ctxutil.GetTraceId(ctx),
+		MessageID:   strconv.Itoa(int(uuid.New().ID())),
+		ContentType: "application/json",
+		Body:        messageByte,
+		Headers:     make(map[string]any),
+	}); msgErr != nil {
+		logger.CtxErrorf(ctx, "send login log error: %v", err)
+		return nil, msgErr
+	}
+	return loginResponse, err
 }
 
 func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {

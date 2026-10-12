@@ -78,14 +78,14 @@ func QueryPositionList(ctx context.Context, req *user.UserPositionRequest) (list
 
 func QueryPositionById(ctx context.Context, id int64) (resp *modle.UserPosition, err error) {
 	if err = mysql.GetReadMysqlDDB().WithContext(ctx).First(&resp, id).Error; err != nil {
-		return
+		return nil, err
 	}
 	return
 }
 
 func QueryPositionByIdList(ctx context.Context, ids []int64) (list []*modle.UserPosition, err error) {
 	if err = mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserPosition{}).Where("id in (?)", ids).Find(&list).Error; err != nil {
-		return
+		return nil, err
 	}
 	return
 }
