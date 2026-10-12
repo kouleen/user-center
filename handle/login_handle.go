@@ -52,16 +52,18 @@ func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginRespons
 		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
 		return nil, errMarshal
 	}
-	if msgErr := message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
-		TraceID:     ctxutil.GetTraceId(ctx),
-		MessageID:   strconv.Itoa(int(uuid.New().ID())),
-		ContentType: "application/json",
-		Body:        messageByte,
-		Headers:     make(map[string]any),
-	}); msgErr != nil {
-		logger.CtxErrorf(ctx, "send login log error: %v", err)
-		return nil, msgErr
-	}
+	traceId := ctxutil.GetTraceId(ctx)
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), "user.login.log.queue", &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
 	return loginResponse, err
 }
 
@@ -119,16 +121,18 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
 		return nil, errMarshal
 	}
-	if msgErr := message.SendToQueue(ctx, "user.login.log.queue", &message.Message{
-		TraceID:     ctxutil.GetTraceId(ctx),
-		MessageID:   strconv.Itoa(int(uuid.New().ID())),
-		ContentType: "application/json",
-		Body:        messageByte,
-		Headers:     make(map[string]any),
-	}); msgErr != nil {
-		logger.CtxErrorf(ctx, "send login log error: %v", err)
-		return nil, msgErr
-	}
+	traceId := ctxutil.GetTraceId(ctx)
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), "user.login.log.queue", &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
 	return loginResponse, err
 }
 
