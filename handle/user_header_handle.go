@@ -18,7 +18,10 @@ func QueryUserHeaderList(ctx context.Context, req *user.UserHeaderRequest) (resp
 }
 
 func QueryUserHeaderInfo(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderResponse, err error) {
-	userId := ctxutil.GetUserId(ctx)
+	userId := req.GetId()
+	if req.Id == nil {
+		userId = ctxutil.GetUserId(ctx)
+	}
 	return service.QueryUserHeaderInfo(ctx, userId)
 }
 
