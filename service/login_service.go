@@ -204,24 +204,17 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	}
 	id := node.Generate().Int64()
 	password := string(hashPwd)
-	if err = repository.CreateUserHeader(ctx, &modle.UserHeader{
+	userHeader = &modle.UserHeader{
 		ID:       id,
 		Username: req.GetUsername(),
 		Password: password,
 		Nickname: req.GetNickname(),
 		Phone:    req.GetPhone(),
 		Gender:   req.Gender,
-	}); err != nil {
+	}
+	if err = repository.CreateUserHeader(ctx, userHeader); err != nil {
 		return nil, err
 	}
-	userHeader, err = repository.GetUserHeaderByUsername(ctx, req.Username)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-	if userHeader == nil {
-		return nil, errors.New("注册失败！")
-	}
-	userHeader.ID = id
 	idStr := strconv.FormatInt(userHeader.ID, 10)
 	bytes, err := json.Marshal(userHeader)
 	if err != nil {

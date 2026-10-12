@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/kouleen/common/pkg/ctxutil"
@@ -78,12 +79,12 @@ func DeleteUserHeader(ctx context.Context, req *user.UserHeaderRequest) (resp bo
 	if len(respList) == 0 {
 		return false, nil
 	}
-	isDelete := int8(1)
 	for _, header := range respList {
-		header.IsDelete = &isDelete
-		header.UpdatedBy = ctxutil.GetUserId(ctx)
+		if common.BaseStatus_ENABLE == common.BaseStatus(header.GetStatus()) {
+			return false, errors.New("user status is enabled")
+		}
 	}
-	if err = repository.BatchUpdateUserHeader(ctx, respList); err != nil {
+	if err = repository.BatchDeleteUserHeader(ctx, req.GetUserIdList()); err != nil {
 		return false, err
 	}
 	return true, nil

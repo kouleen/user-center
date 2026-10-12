@@ -124,3 +124,14 @@ func BatchUpdateUserHeader(ctx context.Context, entityList []*modle.UserHeader) 
 		return nil
 	})
 }
+
+func BatchDeleteUserHeader(ctx context.Context, idList []int64) error {
+	return mysql.GetWriteMysqlDDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(idList) > 0 {
+			if err := tx.Where("id in (?)", idList).Delete(&modle.UserHeader{}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
