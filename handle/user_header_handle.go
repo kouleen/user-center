@@ -33,17 +33,17 @@ func UpdateUserHeaderStatus(ctx context.Context, req *user.UserHeaderRequest) (r
 }
 
 func DeleteUserHeader(ctx context.Context, req *user.UserHeaderRequest) (resp bool, err error) {
-	if req.GetUserIdList() != nil || len(req.GetUserIdList()) == 0 {
+	if req.GetUserIdList() == nil || len(req.GetUserIdList()) == 0 {
 		return false, errors.New("invalid user id list")
 	}
 	return service.DeleteUserHeader(ctx, req)
 }
 
 func checkUpdateUserHeaderStatus(req *user.UserHeaderRequest) (err error) {
-	if req.Id != nil {
+	if req.Id == nil {
 		return errors.New("id is required")
 	}
-	if req.Status != nil {
+	if req.Status == nil {
 		return errors.New("status is required")
 	}
 	return
