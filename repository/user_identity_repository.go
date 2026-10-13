@@ -33,7 +33,7 @@ func QueryIdentityPage(ctx context.Context, req *user.UserIdentityRequest) (resp
 }
 
 func getUserIdentityQuery(ctx context.Context, req *user.UserIdentityRequest) *gorm.DB {
-	query := mysql.GetReadMysqlDDB().WithContext(ctx).Where("is_deleted = 0")
+	query := mysql.GetReadMysqlDDB().WithContext(ctx).Model(&modle.UserIdentity{}).Where("is_delete = 0")
 	if req.Gender != nil {
 		query = query.Where("gender = ?", req.Gender)
 	}
@@ -41,7 +41,7 @@ func getUserIdentityQuery(ctx context.Context, req *user.UserIdentityRequest) *g
 		query = query.Where("user_code like ?", req.GetUserCode()+"%")
 	}
 	if req.GetUsername() != "" {
-		query = query.Where("username like ?", "%"+req.GetUsername()+"%")
+		query = query.Where("user_name like ?", "%"+req.GetUsername()+"%")
 	}
 	return query
 }

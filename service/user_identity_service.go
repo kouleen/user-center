@@ -72,8 +72,6 @@ func UpdateIdentity(ctx context.Context, req *user.UserIdentityRequest) (resp bo
 	if err != nil {
 		return
 	}
-	item.Username = req.GetUsername()
-	item.Gender = req.Gender
 	item.Phone = req.GetPhone()
 	item.Remark = req.GetRemark()
 	item.IsDelete = req.IsDelete
