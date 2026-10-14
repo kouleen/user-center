@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 
+	"github.com/kouleen/common/client"
 	"github.com/kouleen/common/pkg/ctxutil"
 	rediscli "github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
+	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func QueryUserHeaderPage(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderPageResponse, err error) {
@@ -45,6 +49,71 @@ func QueryUserHeaderInfo(ctx context.Context, id int64) (resp *user.UserHeaderRe
 		return nil, err
 	}
 	return header.ConvertResp(), nil
+}
+
+func QueryUserProfile(ctx context.Context, id int64) (resp *user.UserHeaderResponse, err error) {
+	header, err := repository.GetUserHeaderById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	headerResponse := header.ConvertResp()
+	req := &system.SystemRoleRequest{
+		UserId: &id,
+	}
+	systemRoleList, err := client.GetSystemRpc().QuerySystemRoleList(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	roleNameArr := make([]string, len(systemRoleList))
+	for index, response := range systemRoleList {
+		roleNameArr[index] = response.RoleName
+	}
+	roleNames := strings.Join(roleNameArr, ",")
+	headerResponse.RoleNames = roleNames
+	return headerResponse, nil
+}
+
+func UpdateUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	header, err := repository.GetUserHeaderById(ctx, ctxutil.GetUserId(ctx))
+	if err != nil {
+		return false, err
+	}
+	header.Nickname = req.GetNickname()
+	header.Phone = req.GetPhone()
+	header.Gender = req.Gender
+	if err = repository.UpdateUserHeader(ctx, header); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
+	userHeader, err := repository.GetUserHeaderById(ctx, ctxutil.GetUserId(ctx))
+	if err != nil {
+		return false, err
+	}
+	// 对比密码
+	if err = bcrypt.CompareHashAndPassword([]byte(userHeader.Password), []byte(req.OldPassword)); err != nil {
+		return
+	}
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword_), bcrypt.DefaultCost)
+	if err != nil {
+		return false, err
+	}
+	userHeader.Password = string(hashPwd)
+	if err = repository.UpdateUserHeader(ctx, userHeader); err != nil {
+		return false, err
+	}
+	// 退出登录
+	userIdStr := strconv.FormatInt(userHeader.ID, 10)
+	token, err := rediscli.Get(ctx, userIdStr)
+	if _, err = rediscli.Unlink(ctx, token); err != nil {
+		return false, err
+	}
+	if _, err = rediscli.Unlink(ctx, userIdStr); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func UpdateUserHeaderStatus(ctx context.Context, req *user.UserHeaderRequest) (resp bool, err error) {

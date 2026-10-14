@@ -40,6 +40,21 @@ func (s *UserServiceImpl) Logout(ctx context.Context, req *user.LoginRequest) (r
 	return handle.Logout(ctx, req)
 }
 
+// QueryUserProfile implements the UserServiceImpl interface.
+func (s *UserServiceImpl) QueryUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r *user.UserHeaderResponse, err error) {
+	return handle.QueryUserProfile(ctx, req)
+}
+
+// UpdateUserProfile implements the UserServiceImpl interface.
+func (s *UserServiceImpl) UpdateUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	return handle.UpdateUserProfile(ctx, req)
+}
+
+// UpdateUserPassword implements the UserServiceImpl interface.
+func (s *UserServiceImpl) UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
+	return handle.UpdateUserPassword(ctx, req)
+}
+
 // QueryUserHeaderPage implements the UserServiceImpl interface.
 func (s *UserServiceImpl) QueryUserHeaderPage(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderPageResponse, err error) {
 	return handle.QueryUserHeaderPage(ctx, req)

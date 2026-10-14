@@ -25,6 +25,34 @@ func QueryUserHeaderInfo(ctx context.Context, req *user.UserHeaderRequest) (resp
 	return service.QueryUserHeaderInfo(ctx, userId)
 }
 
+func QueryUserProfile(ctx context.Context, req *user.UserHeaderRequest) (resp *user.UserHeaderResponse, err error) {
+	userId := req.GetId()
+	if req.Id == nil {
+		userId = ctxutil.GetUserId(ctx)
+	}
+	return service.QueryUserProfile(ctx, userId)
+}
+
+func UpdateUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	if req.GetNickname() == "" {
+		return false, errors.New("nickname is empty")
+	}
+	if req.GetPhone() == "" {
+		return false, errors.New("phone is empty")
+	}
+	if req.Gender == nil {
+		return false, errors.New("gender is empty")
+	}
+	return service.UpdateUserProfile(ctx, req)
+}
+
+func UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
+	if req.GetOldPassword() == "" || req.GetNewPassword_() == "" {
+		return false, errors.New("password is empty")
+	}
+	return service.UpdateUserPassword(ctx, req)
+}
+
 func UpdateUserHeaderStatus(ctx context.Context, req *user.UserHeaderRequest) (resp bool, err error) {
 	if err = checkUpdateUserHeaderStatus(req); err != nil {
 		return
