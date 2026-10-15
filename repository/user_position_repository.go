@@ -24,7 +24,7 @@ func QueryPositionPage(ctx context.Context, req *user.UserPositionRequest) (list
 	if err = query.Count(&total).Error; err != nil {
 		return
 	}
-	query = query.Order("create_time desc")
+	query = query.Order("create_time desc,id desc")
 	i := (req.GetCurrent() - 1) * req.GetSize()
 	if err = query.Offset(int(i)).Limit(int(req.GetSize())).Find(&list).Error; err != nil {
 		return
