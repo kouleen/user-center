@@ -50,6 +50,11 @@ func (s *UserServiceImpl) UpdateUserProfile(ctx context.Context, req *user.UserH
 	return handle.UpdateUserProfile(ctx, req)
 }
 
+// UpdateUserAvatar implements the UserServiceImpl interface.
+func (s *UserServiceImpl) UpdateUserAvatar(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	return handle.UpdateUserAvatar(ctx, req)
+}
+
 // UpdateUserPassword implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
 	return handle.UpdateUserPassword(ctx, req)

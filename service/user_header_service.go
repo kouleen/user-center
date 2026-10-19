@@ -87,6 +87,18 @@ func UpdateUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r bool
 	return true, nil
 }
 
+func UpdateUserAvatar(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	header, err := repository.GetUserHeaderById(ctx, ctxutil.GetUserId(ctx))
+	if err != nil {
+		return false, err
+	}
+	header.Avatar = req.GetAvatar()
+	if err = repository.UpdateUserHeader(ctx, header); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
 	userHeader, err := repository.GetUserHeaderById(ctx, ctxutil.GetUserId(ctx))
 	if err != nil {

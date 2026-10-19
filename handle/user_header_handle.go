@@ -46,6 +46,13 @@ func UpdateUserProfile(ctx context.Context, req *user.UserHeaderRequest) (r bool
 	return service.UpdateUserProfile(ctx, req)
 }
 
+func UpdateUserAvatar(ctx context.Context, req *user.UserHeaderRequest) (r bool, err error) {
+	if req.GetAvatar() == "" {
+		return false, errors.New("avatar is empty")
+	}
+	return service.UpdateUserAvatar(ctx, req)
+}
+
 func UpdateUserPassword(ctx context.Context, req *user.UpdateUserPwd) (r bool, err error) {
 	if req.GetOldPassword() == "" || req.GetNewPassword_() == "" {
 		return false, errors.New("password is empty")
