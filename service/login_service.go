@@ -60,7 +60,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 		return nil, err
 	}
 	generateUUID := utils.GenerateUUID()
-	duration := time.Duration(24) * time.Hour
+	duration := time.Duration(24*30) * time.Hour
 	idStr := strconv.FormatInt(userHeader.ID, 10)
 	token, err := rediscli.Get(ctx, idStr)
 	if err != nil {
@@ -105,6 +105,9 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	}
 	generateUUID := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
+	if loginRequest.GetRemember() {
+		duration = time.Duration(24*7) * time.Hour
+	}
 	idStr := strconv.FormatInt(userHeader.ID, 10)
 	token, err := rediscli.Get(ctx, idStr)
 	if err != nil && !errors.Is(err, redis.Nil) {
