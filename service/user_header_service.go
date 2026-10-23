@@ -60,7 +60,7 @@ func QueryUserProfile(ctx context.Context, id int64) (resp *user.UserHeaderRespo
 	req := &system.SystemRoleRequest{
 		UserId: &id,
 	}
-	systemRoleList, err := client.GetSystemRpc().QuerySystemRoleList(ctx, req)
+	systemRoleList, err := client.GetSystemRpc(ctx).QuerySystemRoleList(ctx, req)
 	if err != nil {
 		return nil, err
 	}
