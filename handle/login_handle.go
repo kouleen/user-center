@@ -25,50 +25,11 @@ type LoginProcess interface {
 }
 
 var loginProcessMap = map[user.LoginType]LoginProcess{
-	user.LoginType_LOGIN_PHONE: &service.LoginPhone{},
-	user.LoginType_LOGIN_PWD:   &service.LoginPwd{},
+	user.LoginType_LOGIN_PHONE: NewLoginHandleAspect(&service.LoginPhone{}),
+	user.LoginType_LOGIN_PWD:   NewLoginHandleAspect(&service.LoginPwd{}),
 }
 
 func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginResponse, err error) {
-	loginResponse, err := handleLogin(ctx, req)
-	os, browser := utils.ParseUA(ctx)
-	systemLoginLog := &system.SystemLoginLogRequest{
-		Username: req.GetUsername(),
-		Ip:       utils.GetClientIp(ctx),
-		Os:       os,
-		Browser:  browser,
-	}
-	status := int8(1)
-	systemLoginLog.Remark = "登录成功"
-	if err == nil {
-		systemLoginLog.Token = loginResponse.AccessToken
-	}
-	if err != nil {
-		status = int8(0)
-		systemLoginLog.Remark = err.Error()
-	}
-	systemLoginLog.Status = &status
-	messageByte, errMarshal := json.Marshal(&systemLoginLog)
-	if errMarshal != nil {
-		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
-		return nil, errMarshal
-	}
-	traceId := ctxutil.GetTraceId(ctx)
-	go func() {
-		if msgErr := message.SendToQueue(context.Background(), "user.login.log.queue", &message.Message{
-			TraceID:     traceId,
-			MessageID:   strconv.Itoa(int(uuid.New().ID())),
-			ContentType: "application/json",
-			Body:        messageByte,
-			Headers:     make(map[string]any),
-		}); msgErr != nil {
-			logger.CtxErrorf(ctx, "send login log error: %v", err)
-		}
-	}()
-	return loginResponse, err
-}
-
-func handleLogin(ctx context.Context, req *user.LoginRequest) (resp *user.LoginResponse, err error) {
 	if err = checkLoginParams(ctx, req); err != nil {
 		return nil, err
 	}
@@ -100,66 +61,9 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 		return nil, err
 	}
 	loginResponse, err := service.Register(ctx, req)
-	os, browser := utils.ParseUA(ctx)
-	systemLoginLog := &system.SystemLoginLogRequest{
-		Username: req.GetUsername(),
-		Ip:       utils.GetClientIp(ctx),
-		Os:       os,
-		Browser:  browser,
+	if err = handleSendLoginLog(ctx, req.GetUsername(), loginResponse, err); err != nil {
+		return nil, err
 	}
-	systemOperateLog := &system.SystemOperateLogRequest{
-		Module:   "USER_MODULE",
-		Business: "用户注册",
-		Type:     system.CREATE,
-		Ip:       utils.GetClientIp(ctx),
-		Os:       os,
-		Browser:  browser,
-	}
-	status := int8(1)
-	systemLoginLog.Remark = "注册成功"
-	systemOperateLog.Remark = "注册成功"
-	if err == nil {
-		systemLoginLog.Token = loginResponse.AccessToken
-	}
-	if err != nil {
-		status = int8(0)
-		systemLoginLog.Remark = err.Error()
-	}
-	systemLoginLog.Status = &status
-	messageByte, errMarshal := json.Marshal(&systemLoginLog)
-	if errMarshal != nil {
-		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
-		return nil, errMarshal
-	}
-	traceId := ctxutil.GetTraceId(ctx)
-	go func() {
-		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_LOGIN_LOG_QUEUE, &message.Message{
-			TraceID:     traceId,
-			MessageID:   strconv.Itoa(int(uuid.New().ID())),
-			ContentType: "application/json",
-			Body:        messageByte,
-			Headers:     make(map[string]any),
-		}); msgErr != nil {
-			logger.CtxErrorf(ctx, "send login log error: %v", err)
-		}
-	}()
-	systemOperateLog.Status = &status
-	operateLogMessageByte, operateLogErrMarshal := json.Marshal(&systemOperateLog)
-	if operateLogErrMarshal != nil {
-		logger.CtxErrorf(ctx, "operateLogErrMarshal: %v", operateLogErrMarshal)
-		return nil, operateLogErrMarshal
-	}
-	go func() {
-		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_OPERATE_LOG_QUEUE, &message.Message{
-			TraceID:     traceId,
-			MessageID:   strconv.Itoa(int(uuid.New().ID())),
-			ContentType: "application/json",
-			Body:        operateLogMessageByte,
-			Headers:     make(map[string]any),
-		}); msgErr != nil {
-			logger.CtxErrorf(ctx, "send login log error: %v", err)
-		}
-	}()
 	return loginResponse, err
 }
 
@@ -173,6 +77,61 @@ func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error
 func Logout(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
 	id := ctxutil.GetUserId(ctx)
 	return service.Logout(ctx, id)
+}
+
+type LoginHandleAspect struct {
+	inner LoginProcess
+}
+
+// NewLoginHandleAspect 包装构造函数
+func NewLoginHandleAspect(inner LoginProcess) LoginProcess {
+	return &LoginHandleAspect{inner: inner}
+}
+
+func (p *LoginHandleAspect) HandleLogin(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
+	loginResponse, err := p.inner.HandleLogin(ctx, loginRequest)
+	if err = handleSendLoginLog(ctx, loginRequest.GetUsername(), loginResponse, err); err != nil {
+		return nil, err
+	}
+	return loginResponse, err
+}
+
+func handleSendLoginLog(ctx context.Context, username string, loginResponse *user.LoginResponse, err error) error {
+	os, browser := utils.ParseUA(ctx)
+	systemLoginLog := &system.SystemLoginLogRequest{
+		Username: username,
+		Ip:       utils.GetClientIp(ctx),
+		Os:       os,
+		Browser:  browser,
+	}
+	status := int8(1)
+	systemLoginLog.Remark = "登录成功"
+	if err == nil {
+		systemLoginLog.Token = loginResponse.AccessToken
+	}
+	if err != nil {
+		status = int8(0)
+		systemLoginLog.Remark = err.Error()
+	}
+	systemLoginLog.Status = &status
+	messageByte, errMarshal := json.Marshal(&systemLoginLog)
+	if errMarshal != nil {
+		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
+		return errMarshal
+	}
+	traceId := ctxutil.GetTraceId(ctx)
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_LOGIN_LOG_QUEUE, &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
+	return nil
 }
 
 func checkRegister(req *user.RegisterRequest) error {

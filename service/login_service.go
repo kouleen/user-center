@@ -130,17 +130,17 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 
 func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaResponse, err error) {
 	code := utils.GenerateRandomCode(4)
-	uuid := utils.GenerateUUID()
+	generateUUID := utils.GenerateUUID()
 	imgBase64 := utils.CreateCaptchaSvg(code)
 	// 验证码保留60秒
 	duration := time.Duration(60) * time.Second
-	if err = rediscli.Set(ctx, uuid, code, duration); err != nil {
+	if err = rediscli.Set(ctx, generateUUID, code, duration); err != nil {
 		return
 	}
 	return &user.CaptchaResponse{
 		CaptchaEnabled: true,
 		Img:            imgBase64,
-		Uuid:           uuid,
+		Uuid:           generateUUID,
 	}, nil
 }
 
@@ -223,17 +223,17 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	if err != nil {
 		return nil, err
 	}
-	uuid := utils.GenerateUUID()
+	generateUUID := utils.GenerateUUID()
 	duration := time.Duration(24) * time.Hour
-	if err := rediscli.Set(ctx, uuid, string(bytes), duration); err != nil {
+	if err := rediscli.Set(ctx, generateUUID, string(bytes), duration); err != nil {
 		return nil, err
 	}
 
-	if err = rediscli.Set(ctx, idStr, uuid, duration); err != nil {
+	if err = rediscli.Set(ctx, idStr, generateUUID, duration); err != nil {
 		return nil, err
 	}
 	return &user.LoginResponse{
-		AccessToken: uuid,
+		AccessToken: generateUUID,
 		ExpireTime:  duration.Microseconds(),
 	}, nil
 }
