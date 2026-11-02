@@ -9,8 +9,13 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/bytedance/gopkg/util/logger"
+	"github.com/google/uuid"
+	"github.com/kouleen/common/message"
+	"github.com/kouleen/common/pkg/ctxutil"
 	rediscli "github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
+	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
 	"github.com/kouleen/user-center/repository"
@@ -37,14 +42,18 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 			return nil, err
 		}
 		id := node.Generate().Int64()
-		userHeader = &modle.UserHeader{
+		userHeaderCreate := modle.UserHeader{
 			ID:       id,
 			Username: loginRequest.Phone,
 			Password: string(hashPwd),
 			Nickname: loginRequest.Phone,
 			Phone:    loginRequest.Phone,
 		}
-		if err = repository.CreateUserHeader(ctx, userHeader); err != nil {
+		if err = repository.CreateUserHeader(ctx, &userHeaderCreate); err != nil {
+			return nil, err
+		}
+		userHeader = &userHeaderCreate
+		if err := sendOperateLog(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -79,6 +88,39 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 		AccessToken: generateUUID,
 		ExpireTime:  duration.Microseconds(),
 	}, nil
+}
+
+func sendOperateLog(ctx context.Context) (err error) {
+	os, browser := utils.ParseUA(ctx)
+	systemOperateLog := &system.SystemOperateLogRequest{
+		Module:   "USER_MODULE",
+		Business: "用户注册",
+		Type:     "CREATE",
+		Ip:       utils.GetClientIp(ctx),
+		Os:       os,
+		Browser:  browser,
+	}
+	status := int8(1)
+	systemOperateLog.Remark = "注册成功"
+	systemOperateLog.Status = &status
+	messageByte, errMarshal := json.Marshal(&systemOperateLog)
+	if errMarshal != nil {
+		logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
+		return nil
+	}
+	traceId := ctxutil.GetTraceId(ctx)
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_OPERATE_LOG_QUEUE, &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
+	return nil
 }
 
 type LoginPwd struct{}
