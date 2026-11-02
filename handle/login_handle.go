@@ -60,7 +60,8 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	if err = checkRegister(req); err != nil {
 		return nil, err
 	}
-	loginResponse, err := service.Register(ctx, req)
+	register := wrapRegister(service.Register)
+	loginResponse, err := register(ctx, req)
 	if err = handleSendLoginLog(ctx, req.GetUsername(), loginResponse, err); err != nil {
 		return nil, err
 	}
@@ -77,6 +78,47 @@ func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error
 func Logout(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
 	id := ctxutil.GetUserId(ctx)
 	return service.Logout(ctx, id)
+}
+
+// 切面包装器，环绕通知
+func wrapRegister(next func(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error)) func(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+	return func(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
+		resp, err = next(ctx, req)
+		os, browser := utils.ParseUA(ctx)
+		systemOperateLog := &system.SystemOperateLogRequest{
+			Module:   "USER_MODULE",
+			Business: "用户注册",
+			Type:     "CREATE",
+			Ip:       utils.GetClientIp(ctx),
+			Os:       os,
+			Browser:  browser,
+		}
+		status := int8(1)
+		systemOperateLog.Remark = "注册成功"
+		if err != nil {
+			status = int8(0)
+			systemOperateLog.Remark = err.Error()
+		}
+		systemOperateLog.Status = &status
+		messageByte, errMarshal := json.Marshal(&systemOperateLog)
+		if errMarshal != nil {
+			logger.CtxErrorf(ctx, "errMarshal: %v", errMarshal)
+			return nil, errMarshal
+		}
+		traceId := ctxutil.GetTraceId(ctx)
+		go func() {
+			if msgErr := message.SendToQueue(context.Background(), common.SYSTEM_OPERATE_LOG_QUEUE, &message.Message{
+				TraceID:     traceId,
+				MessageID:   strconv.Itoa(int(uuid.New().ID())),
+				ContentType: "application/json",
+				Body:        messageByte,
+				Headers:     make(map[string]any),
+			}); msgErr != nil {
+				logger.CtxErrorf(ctx, "send login log error: %v", err)
+			}
+		}()
+		return resp, err
+	}
 }
 
 type LoginHandleAspect struct {
