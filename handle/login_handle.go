@@ -14,6 +14,7 @@ import (
 	"github.com/kouleen/common/pkg/ctxutil"
 	"github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
+	"github.com/kouleen/idl/kitex_gen/rpc"
 	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/service"
@@ -62,8 +63,8 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	}
 	register := wrapRegister(service.Register)
 	loginResponse, err := register(ctx, req)
-	if err = handleSendLoginLog(ctx, req.GetUsername(), loginResponse, err); err != nil {
-		return nil, err
+	if loginLogErr := handleSendLoginLog(ctx, req.GetUsername(), loginResponse, err); loginLogErr != nil {
+		return nil, loginLogErr
 	}
 	return loginResponse, err
 }
@@ -86,9 +87,9 @@ func wrapRegister(next func(ctx context.Context, req *user.RegisterRequest) (res
 		resp, err = next(ctx, req)
 		os, browser := utils.ParseUA(ctx)
 		systemOperateLog := &system.SystemOperateLogRequest{
-			Module:   "USER_MODULE",
+			Module:   rpc.USER_RPC_SERVER,
 			Business: "用户注册",
-			Type:     "CREATE",
+			Type:     system.CREATE,
 			Ip:       utils.GetClientIp(ctx),
 			Os:       os,
 			Browser:  browser,
@@ -132,8 +133,8 @@ func NewLoginHandleAspect(inner LoginProcess) LoginProcess {
 
 func (p *LoginHandleAspect) HandleLogin(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
 	loginResponse, err := p.inner.HandleLogin(ctx, loginRequest)
-	if err = handleSendLoginLog(ctx, loginRequest.GetUsername(), loginResponse, err); err != nil {
-		return nil, err
+	if loginLogErr := handleSendLoginLog(ctx, loginRequest.GetUsername(), loginResponse, err); loginLogErr != nil {
+		return nil, loginLogErr
 	}
 	return loginResponse, err
 }

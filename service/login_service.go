@@ -15,6 +15,7 @@ import (
 	"github.com/kouleen/common/pkg/ctxutil"
 	rediscli "github.com/kouleen/common/pkg/redis"
 	"github.com/kouleen/idl/kitex_gen/common"
+	"github.com/kouleen/idl/kitex_gen/rpc"
 	"github.com/kouleen/idl/kitex_gen/system"
 	"github.com/kouleen/idl/kitex_gen/user"
 	"github.com/kouleen/user-center/modle"
@@ -93,9 +94,9 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 func sendOperateLog(ctx context.Context) (err error) {
 	os, browser := utils.ParseUA(ctx)
 	systemOperateLog := &system.SystemOperateLogRequest{
-		Module:   "USER_MODULE",
+		Module:   rpc.USER_RPC_SERVER,
 		Business: "用户注册",
-		Type:     "CREATE",
+		Type:     system.CREATE,
 		Ip:       utils.GetClientIp(ctx),
 		Os:       os,
 		Browser:  browser,
@@ -136,7 +137,7 @@ func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequ
 	}
 	// 对比密码
 	if err = bcrypt.CompareHashAndPassword([]byte(userHeader.Password), []byte(loginRequest.Password)); err != nil {
-		return
+		return nil, errors.New("用户名或密码错误")
 	}
 	if common.BaseStatus_DISABLED == common.BaseStatus(userHeader.GetStatus()) {
 		return nil, errors.New("this account has been deactivated")
