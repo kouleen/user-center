@@ -124,15 +124,21 @@ func sendOperateLog(ctx context.Context) (err error) {
 	return nil
 }
 
+type LoginCaptcha struct{}
+
+func (p *LoginCaptcha) HandleLogin(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
+	return handleLoginPwd(ctx, loginRequest)
+}
+
 type LoginPwd struct{}
 
 func (p *LoginPwd) HandleLogin(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
+	return handleLoginPwd(ctx, loginRequest)
+}
+
+func handleLoginPwd(ctx context.Context, loginRequest *user.LoginRequest) (resp *user.LoginResponse, err error) {
 	userHeader, err := repository.GetUserHeaderByUsername(ctx, loginRequest.Username)
 	if err != nil {
-		return
-	}
-	// 删除验证码
-	if _, err = rediscli.Unlink(ctx, loginRequest.GetUuid()); err != nil {
 		return
 	}
 	// 对比密码

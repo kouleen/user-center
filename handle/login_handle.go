@@ -26,8 +26,9 @@ type LoginProcess interface {
 }
 
 var loginProcessMap = map[user.LoginType]LoginProcess{
-	user.LoginType_LOGIN_PHONE: NewLoginHandleAspect(&service.LoginPhone{}),
-	user.LoginType_LOGIN_PWD:   NewLoginHandleAspect(&service.LoginPwd{}),
+	user.LoginType_LOGIN_PHONE:   NewLoginHandleAspect(&service.LoginPhone{}),
+	user.LoginType_LOGIN_CAPTCHA: NewLoginHandleAspect(&service.LoginCaptcha{}),
+	user.LoginType_LOGIN_PWD:     NewLoginHandleAspect(&service.LoginPwd{}),
 }
 
 func Login(ctx context.Context, req *user.LoginRequest) (resp *user.LoginResponse, err error) {
@@ -225,6 +226,13 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		if captchaCode != req.GetCode() {
 			return errors.New("captcha code error")
 		}
+	case user.LoginType_LOGIN_CAPTCHA:
+		if req.GetUsername() == "" {
+			return errors.New("username is empty")
+		}
+		if req.GetPassword() == "" {
+			return errors.New("password is empty")
+		}
 	case user.LoginType_LOGIN_PWD:
 		if req.GetUsername() == "" {
 			return errors.New("username is empty")
@@ -242,6 +250,9 @@ func checkLoginParams(ctx context.Context, req *user.LoginRequest) error {
 		// 转成全小些对比
 		if strings.ToLower(captchaCode) != strings.ToLower(req.GetCode()) {
 			return errors.New("captcha code error")
+		}
+		if _, err = redis.Unlink(ctx, req.GetUuid()); err != nil {
+			return err
 		}
 	default:
 		return errors.New("login_type error")
