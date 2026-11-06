@@ -87,7 +87,7 @@ func (p *LoginPhone) HandleLogin(ctx context.Context, loginRequest *user.LoginRe
 	}
 	return &user.LoginResponse{
 		AccessToken: generateUUID,
-		ExpireTime:  duration.Microseconds(),
+		ExpireTime:  duration.Milliseconds(),
 	}, nil
 }
 
@@ -173,7 +173,7 @@ func handleLoginPwd(ctx context.Context, loginRequest *user.LoginRequest) (resp 
 	}
 	return &user.LoginResponse{
 		AccessToken: generateUUID,
-		ExpireTime:  duration.Microseconds(),
+		ExpireTime:  duration.Milliseconds(),
 	}, nil
 }
 
@@ -283,7 +283,7 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	}
 	return &user.LoginResponse{
 		AccessToken: generateUUID,
-		ExpireTime:  duration.Microseconds(),
+		ExpireTime:  duration.Milliseconds(),
 	}, nil
 }
 
@@ -310,17 +310,17 @@ func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error
 	return true, nil
 }
 
-func Logout(ctx context.Context, id int64) (resp bool, err error) {
+func Logout(ctx context.Context, id int64) (resp string, err error) {
 	userIdStr := strconv.FormatInt(id, 10)
 	token, err := rediscli.Get(ctx, userIdStr)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	if _, err = rediscli.Unlink(ctx, token); err != nil {
-		return false, err
+		return "", err
 	}
 	if _, err = rediscli.Unlink(ctx, userIdStr); err != nil {
-		return false, err
+		return "", err
 	}
-	return true, nil
+	return token, nil
 }

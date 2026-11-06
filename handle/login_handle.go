@@ -67,6 +67,9 @@ func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginR
 	if loginLogErr := handleSendLoginLog(ctx, req.GetUsername(), loginResponse, err); loginLogErr != nil {
 		return nil, loginLogErr
 	}
+	if loginSyncErr := handleSendLoginSync(ctx, "LOGIN", loginResponse); loginSyncErr != nil {
+		return nil, loginSyncErr
+	}
 	return loginResponse, err
 }
 
@@ -79,7 +82,17 @@ func ResetPwd(ctx context.Context, req *user.LoginRequest) (resp bool, err error
 
 func Logout(ctx context.Context, req *user.LoginRequest) (resp bool, err error) {
 	id := ctxutil.GetUserId(ctx)
-	return service.Logout(ctx, id)
+	accessToken, err := service.Logout(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	if loginSyncErr := handleSendLoginSync(ctx, "LOGOUT", &user.LoginResponse{
+		AccessToken: accessToken,
+		ExpireTime:  0,
+	}); loginSyncErr != nil {
+		return false, loginSyncErr
+	}
+	return true, err
 }
 
 // 切面包装器，环绕通知
@@ -137,7 +150,40 @@ func (p *LoginHandleAspect) HandleLogin(ctx context.Context, loginRequest *user.
 	if loginLogErr := handleSendLoginLog(ctx, loginRequest.GetUsername(), loginResponse, err); loginLogErr != nil {
 		return nil, loginLogErr
 	}
+	if loginSyncErr := handleSendLoginSync(ctx, "LOGIN", loginResponse); loginSyncErr != nil {
+		return nil, loginSyncErr
+	}
 	return loginResponse, err
+}
+
+func handleSendLoginSync(ctx context.Context, interfaceType string, loginResponse *user.LoginResponse) (err error) {
+	syncLoginReq := struct {
+		AccessToken   string `json:"accessToken"`
+		ExpireTime    int64  `json:"expireTime"`
+		InterfaceType string `json:"interfaceType"`
+	}{
+		AccessToken:   loginResponse.GetAccessToken(),
+		ExpireTime:    loginResponse.GetExpireTime(),
+		InterfaceType: interfaceType,
+	}
+	messageByte, err := json.Marshal(syncLoginReq)
+	if err != nil {
+		logger.CtxErrorf(ctx, "jsonErr: %v", err)
+		return err
+	}
+	traceId := ctxutil.GetTraceId(ctx)
+	go func() {
+		if msgErr := message.SendToQueue(context.Background(), "user-login-sync--topic", &message.Message{
+			TraceID:     traceId,
+			MessageID:   strconv.Itoa(int(uuid.New().ID())),
+			ContentType: "application/json",
+			Body:        messageByte,
+			Headers:     make(map[string]any),
+		}); msgErr != nil {
+			logger.CtxErrorf(ctx, "send login log error: %v", err)
+		}
+	}()
+	return nil
 }
 
 func handleSendLoginLog(ctx context.Context, username string, loginResponse *user.LoginResponse, err error) error {
