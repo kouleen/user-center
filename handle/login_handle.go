@@ -173,7 +173,7 @@ func handleSendLoginSync(ctx context.Context, interfaceType string, loginRespons
 	}
 	traceId := ctxutil.GetTraceId(ctx)
 	go func() {
-		if msgErr := message.SendToQueue(context.Background(), "user-login-sync--topic", &message.Message{
+		if msgErr := message.SendToQueue(context.Background(), "user-login-sync-topic", &message.Message{
 			TraceID:     traceId,
 			MessageID:   strconv.Itoa(int(uuid.New().ID())),
 			ContentType: "application/json",
