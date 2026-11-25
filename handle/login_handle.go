@@ -150,8 +150,10 @@ func (p *LoginHandleAspect) HandleLogin(ctx context.Context, loginRequest *user.
 	if loginLogErr := handleSendLoginLog(ctx, loginRequest.GetUsername(), loginResponse, err); loginLogErr != nil {
 		return nil, loginLogErr
 	}
-	if loginSyncErr := handleSendLoginSync(ctx, "LOGIN", loginResponse); loginSyncErr != nil {
-		return nil, loginSyncErr
+	if err != nil {
+		if loginSyncErr := handleSendLoginSync(ctx, "LOGIN", loginResponse); loginSyncErr != nil {
+			return nil, loginSyncErr
+		}
 	}
 	return loginResponse, err
 }
