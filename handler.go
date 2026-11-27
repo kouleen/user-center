@@ -16,8 +16,8 @@ func (s *UserServiceImpl) Captcha(ctx context.Context, req *user.LoginRequest) (
 }
 
 // SmsCode implements the UserServiceImpl interface.
-func (s *UserServiceImpl) SmsCode(ctx context.Context, phone string) (resp int64, err error) {
-	return handle.SmsCode(ctx, phone)
+func (s *UserServiceImpl) SmsCode(ctx context.Context, req *user.SendPhoneRequest) (resp *user.SendPhoneResponse, err error) {
+	return handle.SmsCode(ctx, req)
 }
 
 // Login implements the UserServiceImpl interface.

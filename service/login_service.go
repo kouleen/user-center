@@ -193,17 +193,17 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 	}, nil
 }
 
-func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
-	limit, err := rediscli.Get(ctx, phone+"-limit")
-	if err != nil {
+func SmsCode(ctx context.Context, req *user.SendPhoneRequest) (resp *user.SendPhoneResponse, err error) {
+	limit, err := rediscli.Get(ctx, req.GetPhone()+"-limit")
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return
 	}
 	if limit != "" {
-		duration, err := rediscli.Ttl(ctx, phone+"-limit")
+		duration, err := rediscli.Ttl(ctx, req.GetPhone()+"-limit")
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
-		return duration.Milliseconds(), nil
+		return &user.SendPhoneResponse{Success: false, Countdown: duration.Milliseconds()}, nil
 	}
 	smsCode := utils.GenerateRandomByNumCode(6)
 
@@ -211,15 +211,15 @@ func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
 
 	// 设置过期时间5分钟
 	expire := time.Duration(5) * time.Minute
-	if err := rediscli.Set(ctx, phone, smsCode, expire); err != nil {
-		return 0, err
+	if err := rediscli.Set(ctx, req.GetPhone(), smsCode, expire); err != nil {
+		return nil, err
 	}
 	// 限流一分钟
 	limitExpire := time.Minute
-	if err := rediscli.Set(ctx, phone+"-limit", "1", limitExpire); err != nil {
-		return 0, err
+	if err := rediscli.Set(ctx, req.GetPhone()+"-limit", "1", limitExpire); err != nil {
+		return nil, err
 	}
-	return limitExpire.Milliseconds(), nil
+	return &user.SendPhoneResponse{Success: true, Countdown: limitExpire.Milliseconds()}, nil
 }
 
 func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {

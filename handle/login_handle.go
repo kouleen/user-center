@@ -51,11 +51,11 @@ func Captcha(ctx context.Context, req *user.LoginRequest) (resp *user.CaptchaRes
 
 var phoneRegex = regexp.MustCompile(`^1[3-9]\d{9}$`)
 
-func SmsCode(ctx context.Context, phone string) (resp int64, err error) {
-	if phoneRegex.MatchString(phone) {
-		return 0, errors.New("invalid phone number")
+func SmsCode(ctx context.Context, req *user.SendPhoneRequest) (resp *user.SendPhoneResponse, err error) {
+	if !phoneRegex.MatchString(req.GetPhone()) {
+		return nil, errors.New("invalid phone number")
 	}
-	return service.SmsCode(ctx, phone)
+	return service.SmsCode(ctx, req)
 }
 
 func Register(ctx context.Context, req *user.RegisterRequest) (resp *user.LoginResponse, err error) {
